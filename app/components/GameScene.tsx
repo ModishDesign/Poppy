@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Poppy from './Poppy';
-import type { Room } from '../page';
+import type { Room } from '../types';
 
 interface RoomConfig {
   id: Room;

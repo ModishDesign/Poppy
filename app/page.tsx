@@ -3,17 +3,8 @@
 import { useState } from 'react';
 import StartScreen from './components/StartScreen';
 import GameScene from './components/GameScene';
-
-export type Screen = 'start' | 'playing';
-
-export type Room = 'living-room' | 'kitchen' | 'bedroom' | 'garden';
-
-export const ROOMS: { id: Room; label: string; emoji: string }[] = [
-  { id: 'living-room', label: 'Living Room', emoji: '🛋️' },
-  { id: 'kitchen', label: 'Kitchen', emoji: '🍳' },
-  { id: 'bedroom', label: 'Bedroom', emoji: '🛏️' },
-  { id: 'garden', label: 'Garden', emoji: '🌻' },
-];
+import { ROOMS } from './types';
+import type { Screen } from './types';
 
 export default function Home() {
   const [screen, setScreen] = useState<Screen>('start');
