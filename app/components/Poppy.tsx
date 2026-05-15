@@ -34,7 +34,7 @@ export default function Poppy({ pose = 'stand', size = 120, className, flipX = f
       height={size * 0.7}
       viewBox="0 0 160 112"
       className={className}
-      style={{ overflow: 'visible', transform: flipX ? 'scaleX(-1)' : undefined }}
+      style={{ overflow: 'visible', transform: flipX ? undefined : 'scaleX(-1)' }}
     >
       {/* Shadow */}
       <ellipse cx={80} cy={108} rx={50} ry={4} fill="rgba(0,0,0,0.12)" />
