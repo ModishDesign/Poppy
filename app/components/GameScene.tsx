@@ -3,540 +3,486 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Poppy from './Poppy';
-import { LifeStage, StageResult } from '../page';
+import type { Room } from '../page';
 
-interface StageConfig {
-  id: LifeStage;
+interface RoomConfig {
+  id: Room;
   label: string;
-  age: string;
-  gradient: string;
   emoji: string;
 }
 
 interface Props {
-  stage: StageConfig;
-  stageIndex: number;
-  onComplete: (result: StageResult) => void;
+  room: RoomConfig;
+  roomIndex: number;
+  totalRooms: number;
+  onNextRoom: () => void;
+  onPrevRoom: () => void;
   onQuit: () => void;
 }
 
-type Encounter = {
-  id: number;
-  type: 'treat' | 'trick' | 'obstacle';
-  x: number;
+interface Discoverable {
+  id: string;
   emoji: string;
   label: string;
-  collected: boolean;
-  passed: boolean;
-};
-
-const SCENE_LENGTH = 3000;
-const WALK_SPEED = 2.5;
-const ENCOUNTER_TYPES: Record<LifeStage, { treats: string[]; tricks: string[]; obstacles: string[] }> = {
-  puppy: {
-    treats: ['🦴', '🧸', '🥛'],
-    tricks: ['🐾', '📣', '🎾'],
-    obstacles: ['🪨', '💧', '🐱'],
-  },
-  junior: {
-    treats: ['🦴', '🌭', '🍖'],
-    tricks: ['🎾', '🦮', '🏃'],
-    obstacles: ['🚗', '🌊', '🐕'],
-  },
-  adolescent: {
-    treats: ['🍖', '🧀', '🍗'],
-    tricks: ['🎯', '💨', '🦮'],
-    obstacles: ['🌧️', '🐍', '🚧'],
-  },
-  adult: {
-    treats: ['🥩', '🧀', '🍖'],
-    tricks: ['🏆', '🎪', '🦮'],
-    obstacles: ['🌩️', '🐻', '🚜'],
-  },
-  senior: {
-    treats: ['🦴', '🛋️', '☀️'],
-    tricks: ['🐾', '🎵', '💤'],
-    obstacles: ['🪨', '🌧️', '🐈'],
-  },
-};
-
-function generateEncounters(stage: LifeStage): Encounter[] {
-  const types = ENCOUNTER_TYPES[stage];
-  const encounters: Encounter[] = [];
-  let id = 0;
-  const spacing = SCENE_LENGTH / 16;
-
-  for (let i = 1; i <= 14; i++) {
-    const x = spacing * i + (Math.random() - 0.5) * spacing * 0.4;
-    const roll = Math.random();
-    let type: 'treat' | 'trick' | 'obstacle';
-    let pool: string[];
-
-    if (roll < 0.4) {
-      type = 'treat';
-      pool = types.treats;
-    } else if (roll < 0.7) {
-      type = 'trick';
-      pool = types.tricks;
-    } else {
-      type = 'obstacle';
-      pool = types.obstacles;
-    }
-
-    const emoji = pool[Math.floor(Math.random() * pool.length)];
-    const labels: Record<string, string> = {
-      treat: 'Treat!',
-      trick: 'Trick!',
-      obstacle: 'Watch out!',
-    };
-
-    encounters.push({
-      id: id++,
-      type,
-      x,
-      emoji,
-      label: labels[type],
-      collected: false,
-      passed: false,
-    });
-  }
-
-  return encounters.sort((a, b) => a.x - b.x);
+  x: number;
+  y: number;
+  message: string;
+  found: boolean;
 }
 
-const SKY_COLORS: Record<LifeStage, { top: string; mid: string; bottom: string }> = {
-  puppy: { top: '#065F46', mid: '#10B981', bottom: '#6EE7B7' },
-  junior: { top: '#92400E', mid: '#F59E0B', bottom: '#FDE68A' },
-  adolescent: { top: '#4C1D95', mid: '#8B5CF6', bottom: '#DDD6FE' },
-  adult: { top: '#1E3A5F', mid: '#3B82F6', bottom: '#93C5FD' },
-  senior: { top: '#9D174D', mid: '#F472B6', bottom: '#FECDD3' },
+const ROOM_THEMES: Record<Room, {
+  wallColor: string;
+  floorColor: string;
+  floorPattern: string;
+  wallAccent: string;
+  lightColor: string;
+}> = {
+  'living-room': {
+    wallColor: '#FEF3C7',
+    floorColor: '#D2A679',
+    floorPattern: '#C49B6F',
+    wallAccent: '#FDE68A',
+    lightColor: '#FFFBEB',
+  },
+  kitchen: {
+    wallColor: '#ECFDF5',
+    floorColor: '#9CA3AF',
+    floorPattern: '#D1D5DB',
+    wallAccent: '#A7F3D0',
+    lightColor: '#F0FDF4',
+  },
+  bedroom: {
+    wallColor: '#EDE9FE',
+    floorColor: '#D2A679',
+    floorPattern: '#C49B6F',
+    wallAccent: '#DDD6FE',
+    lightColor: '#F5F3FF',
+  },
+  garden: {
+    wallColor: '#87CEEB',
+    floorColor: '#4ADE80',
+    floorPattern: '#22C55E',
+    wallAccent: '#BAE6FD',
+    lightColor: '#F0F9FF',
+  },
 };
 
-const GROUND_COLORS: Record<LifeStage, { grass: string; dirt: string; path: string }> = {
-  puppy: { grass: '#059669', dirt: '#92400E', path: '#D97706' },
-  junior: { grass: '#65A30D', dirt: '#78350F', path: '#A16207' },
-  adolescent: { grass: '#7C3AED', dirt: '#581C87', path: '#A855F7' },
-  adult: { grass: '#2563EB', dirt: '#1E3A5F', path: '#60A5FA' },
-  senior: { grass: '#DB2777', dirt: '#9D174D', path: '#F9A8D4' },
+const ROOM_ITEMS: Record<Room, Discoverable[]> = {
+  'living-room': [
+    { id: 'couch', emoji: '🛋️', label: 'Couch', x: 15, y: 52, message: 'Poppy jumps on the couch! So comfy!', found: false },
+    { id: 'tv', emoji: '📺', label: 'TV', x: 42, y: 32, message: 'Poppy tilts her head at the TV. What is that animal?', found: false },
+    { id: 'shoe', emoji: '👟', label: 'Shoe', x: 70, y: 72, message: 'Poppy found a shoe! Her favourite chew toy!', found: false },
+    { id: 'plant', emoji: '🪴', label: 'Plant', x: 85, y: 48, message: 'Poppy sniffs the plant curiously.', found: false },
+    { id: 'ball', emoji: '🎾', label: 'Tennis Ball', x: 55, y: 75, message: 'A tennis ball! Poppy\'s tail goes wild!', found: false },
+  ],
+  kitchen: [
+    { id: 'bowl', emoji: '🥣', label: 'Food Bowl', x: 25, y: 72, message: 'Poppy checks her bowl. Dinnertime?', found: false },
+    { id: 'fridge', emoji: '🧊', label: 'Fridge', x: 80, y: 38, message: 'Poppy stares at the fridge. She knows treats are in there!', found: false },
+    { id: 'crumb', emoji: '🍪', label: 'Cookie Crumb', x: 50, y: 78, message: 'Poppy found a crumb! Delicious floor snack!', found: false },
+    { id: 'water', emoji: '💧', label: 'Water Bowl', x: 30, y: 75, message: 'Slurp slurp! Poppy takes a big drink.', found: false },
+    { id: 'bin', emoji: '🗑️', label: 'Bin', x: 65, y: 55, message: 'Poppy eyes the bin mischievously...', found: false },
+  ],
+  bedroom: [
+    { id: 'bed', emoji: '🛏️', label: 'Bed', x: 30, y: 45, message: 'Poppy hops on the bed! No dogs allowed... oops!', found: false },
+    { id: 'slipper', emoji: '🩴', label: 'Slipper', x: 60, y: 78, message: 'Poppy grabs a slipper and runs!', found: false },
+    { id: 'sock', emoji: '🧦', label: 'Sock', x: 75, y: 72, message: 'A stinky sock! Poppy\'s favourite!', found: false },
+    { id: 'blanket', emoji: '🧣', label: 'Blanket', x: 20, y: 65, message: 'Poppy burrows under the blanket like a sausage roll.', found: false },
+    { id: 'toy', emoji: '🧸', label: 'Teddy Bear', x: 88, y: 60, message: 'Poppy carries the teddy around proudly!', found: false },
+  ],
+  garden: [
+    { id: 'butterfly', emoji: '🦋', label: 'Butterfly', x: 35, y: 28, message: 'Poppy chases a butterfly! Almost got it!', found: false },
+    { id: 'flower', emoji: '🌻', label: 'Sunflower', x: 70, y: 50, message: 'Poppy stops to smell the flowers. Achoo!', found: false },
+    { id: 'bone', emoji: '🦴', label: 'Buried Bone', x: 50, y: 78, message: 'Poppy digs up a bone she buried last week!', found: false },
+    { id: 'puddle', emoji: '💦', label: 'Puddle', x: 20, y: 72, message: 'Splish splash! Poppy jumps in the puddle!', found: false },
+    { id: 'squirrel', emoji: '🐿️', label: 'Squirrel', x: 85, y: 35, message: 'SQUIRREL! Poppy goes absolutely mental!', found: false },
+    { id: 'stick', emoji: '🪵', label: 'Stick', x: 60, y: 75, message: 'The perfect stick! Poppy is so proud of it.', found: false },
+  ],
 };
 
-function SceneryItem({ type, x, stage }: { type: string; x: number; stage: LifeStage }) {
-  const colors = GROUND_COLORS[stage];
-  switch (type) {
-    case 'tree':
-      return (
-        <g transform={`translate(${x}, 0)`}>
-          <rect x={-3} y={-35} width={6} height={35} rx={2} fill="#78350F" />
-          <circle cx={0} cy={-42} r={16} fill={colors.grass} opacity={0.9} />
-          <circle cx={-8} cy={-36} r={12} fill={colors.grass} opacity={0.8} />
-          <circle cx={8} cy={-36} r={12} fill={colors.grass} opacity={0.8} />
-        </g>
-      );
-    case 'bush':
-      return (
-        <g transform={`translate(${x}, 0)`}>
-          <ellipse cx={0} cy={-6} rx={12} ry={8} fill={colors.grass} opacity={0.7} />
-          <ellipse cx={6} cy={-4} rx={8} ry={6} fill={colors.grass} opacity={0.6} />
-        </g>
-      );
-    case 'flower':
-      return (
-        <g transform={`translate(${x}, 0)`}>
-          <line x1={0} y1={0} x2={0} y2={-14} stroke="#059669" strokeWidth={1.5} />
-          <circle cx={0} cy={-16} r={4} fill="#F472B6" />
-          <circle cx={0} cy={-16} r={2} fill="#FBBF24" />
-        </g>
-      );
-    case 'rock':
-      return (
-        <g transform={`translate(${x}, 0)`}>
-          <ellipse cx={0} cy={-3} rx={8} ry={5} fill="#9CA3AF" />
-          <ellipse cx={-2} cy={-5} rx={5} ry={3} fill="#D1D5DB" />
-        </g>
-      );
-    default:
-      return null;
+function RoomBackground({ room }: { room: Room }) {
+  const theme = ROOM_THEMES[room];
+
+  if (room === 'garden') {
+    return (
+      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 300" preserveAspectRatio="none">
+        {/* Sky */}
+        <rect x={0} y={0} width={400} height={180} fill={theme.wallColor} />
+        {/* Clouds */}
+        <ellipse cx={80} cy={40} rx={40} ry={15} fill="white" opacity={0.7} />
+        <ellipse cx={60} cy={38} rx={25} ry={12} fill="white" opacity={0.6} />
+        <ellipse cx={280} cy={55} rx={35} ry={12} fill="white" opacity={0.5} />
+        <ellipse cx={300} cy={52} rx={20} ry={10} fill="white" opacity={0.4} />
+        {/* Sun */}
+        <circle cx={340} cy={40} r={25} fill="#FCD34D" opacity={0.8} />
+        <circle cx={340} cy={40} r={20} fill="#FBBF24" />
+        {/* Fence */}
+        {Array.from({ length: 12 }, (_, i) => (
+          <g key={i}>
+            <rect x={i * 35 + 5} y={135} width={6} height={50} rx={2} fill="#D2A679" />
+            <rect x={i * 35} y={145} width={35} height={5} rx={2} fill="#C49B6F" />
+            <rect x={i * 35} y={165} width={35} height={5} rx={2} fill="#C49B6F" />
+          </g>
+        ))}
+        {/* Trees in background */}
+        <rect x={20} y={95} width={10} height={50} fill="#92400E" rx={3} />
+        <circle cx={25} cy={80} r={25} fill="#16A34A" opacity={0.8} />
+        <circle cx={15} cy={90} r={18} fill="#22C55E" opacity={0.7} />
+        <rect x={350} y={100} width={10} height={45} fill="#92400E" rx={3} />
+        <circle cx={355} cy={85} r={22} fill="#16A34A" opacity={0.8} />
+        {/* Grass ground */}
+        <rect x={0} y={180} width={400} height={120} fill={theme.floorColor} />
+        <path d="M0,180 Q20,172 40,180 Q60,172 80,180 Q100,172 120,180 Q140,172 160,180 Q180,172 200,180 Q220,172 240,180 Q260,172 280,180 Q300,172 320,180 Q340,172 360,180 Q380,172 400,180 V185 H0 Z" fill={theme.floorPattern} />
+        {/* Flower patches */}
+        <circle cx={100} cy={220} r={3} fill="#F472B6" />
+        <circle cx={105} cy={222} r={3} fill="#FB923C" />
+        <circle cx={250} cy={240} r={3} fill="#A78BFA" />
+        <circle cx={320} cy={215} r={3} fill="#F472B6" />
+        {/* Garden path */}
+        <path d="M180,300 Q190,260 200,240 Q210,220 195,200 Q185,185 200,180" fill="none" stroke="#D2A679" strokeWidth={20} opacity={0.4} />
+      </svg>
+    );
   }
+
+  return (
+    <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 300" preserveAspectRatio="none">
+      {/* Wall */}
+      <rect x={0} y={0} width={400} height={190} fill={theme.wallColor} />
+      {/* Wall baseboard */}
+      <rect x={0} y={175} width={400} height={15} fill={theme.wallAccent} opacity={0.5} />
+      {/* Floor */}
+      <rect x={0} y={190} width={400} height={110} fill={theme.floorColor} />
+      {/* Floor boards/tiles */}
+      {room === 'kitchen' ? (
+        <>
+          {Array.from({ length: 8 }, (_, i) =>
+            Array.from({ length: 5 }, (_, j) => (
+              <rect
+                key={`${i}-${j}`}
+                x={i * 52 + (j % 2) * 26}
+                y={192 + j * 22}
+                width={50}
+                height={20}
+                fill={j % 2 === i % 2 ? theme.floorPattern : theme.floorColor}
+                opacity={0.8}
+              />
+            ))
+          )}
+        </>
+      ) : (
+        <>
+          {Array.from({ length: 10 }, (_, i) => (
+            <line key={i} x1={i * 42} y1={190} x2={i * 42} y2={300} stroke={theme.floorPattern} strokeWidth={1} opacity={0.4} />
+          ))}
+          {[210, 240, 270].map(y => (
+            <line key={y} x1={0} y1={y} x2={400} y2={y} stroke={theme.floorPattern} strokeWidth={0.5} opacity={0.3} />
+          ))}
+        </>
+      )}
+
+      {/* Window */}
+      <rect x={155} y={25} width={90} height={80} rx={4} fill={theme.lightColor} stroke={theme.wallAccent} strokeWidth={4} />
+      <line x1={200} y1={25} x2={200} y2={105} stroke={theme.wallAccent} strokeWidth={3} />
+      <line x1={155} y1={65} x2={245} y2={65} stroke={theme.wallAccent} strokeWidth={3} />
+      {/* Curtains */}
+      <path d="M148,20 Q155,25 155,40 Q152,55 150,70 Q148,80 146,95 Q155,90 158,80" fill={theme.wallAccent} opacity={0.5} />
+      <path d="M252,20 Q245,25 245,40 Q248,55 250,70 Q252,80 254,95 Q245,90 242,80" fill={theme.wallAccent} opacity={0.5} />
+
+      {/* Window light on floor */}
+      <rect x={160} y={195} width={80} height={50} fill={theme.lightColor} opacity={0.3} rx={2} />
+
+      {/* Room-specific furniture silhouettes */}
+      {room === 'living-room' && (
+        <>
+          {/* Bookshelf */}
+          <rect x={310} y={30} width={60} height={140} rx={3} fill="#92400E" opacity={0.2} />
+          <rect x={315} y={35} width={50} height={25} fill="#A16207" opacity={0.15} />
+          <rect x={315} y={65} width={50} height={25} fill="#A16207" opacity={0.15} />
+          <rect x={315} y={95} width={50} height={25} fill="#A16207" opacity={0.15} />
+          {/* Rug */}
+          <ellipse cx={200} cy={250} rx={100} ry={30} fill="#DC2626" opacity={0.15} />
+          <ellipse cx={200} cy={250} rx={80} ry={22} fill="#B91C1C" opacity={0.1} />
+          {/* Lamp */}
+          <rect x={36} y={90} width={4} height={80} fill="#78350F" opacity={0.25} />
+          <path d="M25,90 Q38,70 51,90" fill="#FBBF24" opacity={0.2} />
+        </>
+      )}
+      {room === 'kitchen' && (
+        <>
+          {/* Counter */}
+          <rect x={0} y={90} width={120} height={10} fill="#78350F" opacity={0.2} />
+          <rect x={0} y={100} width={120} height={75} fill="#F5F5F4" opacity={0.15} />
+          {/* Stove */}
+          <rect x={280} y={85} width={80} height={90} rx={3} fill="#F5F5F4" opacity={0.15} />
+          <circle cx={300} cy={95} r={8} fill="#1F2937" opacity={0.08} />
+          <circle cx={340} cy={95} r={8} fill="#1F2937" opacity={0.08} />
+        </>
+      )}
+      {room === 'bedroom' && (
+        <>
+          {/* Bed frame */}
+          <rect x={10} y={80} width={150} height={95} rx={6} fill="#92400E" opacity={0.15} />
+          <rect x={15} y={85} width={140} height={60} rx={4} fill="#DBEAFE" opacity={0.2} />
+          <ellipse cx={45} cy={95} r={18} fill="white" opacity={0.2} />
+          {/* Nightstand */}
+          <rect x={170} y={120} width={35} height={50} rx={3} fill="#78350F" opacity={0.15} />
+          {/* Lamp on nightstand */}
+          <rect x={185} y={100} width={4} height={20} fill="#78350F" opacity={0.2} />
+          <ellipse cx={187} cy={98} rx={10} ry={6} fill="#FCD34D" opacity={0.15} />
+        </>
+      )}
+    </svg>
+  );
 }
 
-function generateScenery(stage: LifeStage): { type: string; x: number; layer: number }[] {
-  const items: { type: string; x: number; layer: number }[] = [];
-  const types = ['tree', 'bush', 'flower', 'rock'];
-  for (let i = 0; i < 40; i++) {
-    items.push({
-      type: types[Math.floor(Math.random() * types.length)],
-      x: Math.random() * SCENE_LENGTH,
-      layer: Math.random() < 0.5 ? 0 : 1,
-    });
-  }
-  return items.sort((a, b) => a.x - b.x);
-}
+export default function GameScene({ room, roomIndex, totalRooms, onNextRoom, onPrevRoom, onQuit }: Props) {
+  const [poppyX, setPoppyX] = useState(20);
+  const [targetX, setTargetX] = useState(20);
+  const [isMoving, setIsMoving] = useState(false);
+  const [facingRight, setFacingRight] = useState(true);
+  const [items, setItems] = useState<Discoverable[]>(ROOM_ITEMS[room.id].map(i => ({ ...i })));
+  const [activeMessage, setActiveMessage] = useState<{ text: string; emoji: string } | null>(null);
+  const [discoveredCount, setDiscoveredCount] = useState(0);
+  const [showRoomIntro, setShowRoomIntro] = useState(true);
+  const [pose, setPose] = useState<'stand' | 'walk' | 'sniff' | 'wag'>('stand');
 
-export default function GameScene({ stage, stageIndex, onComplete, onQuit }: Props) {
-  const [scrollX, setScrollX] = useState(0);
-  const [encounters, setEncounters] = useState<Encounter[]>(() => generateEncounters(stage.id));
-  const [scenery] = useState(() => generateScenery(stage.id));
-  const [score, setScore] = useState(0);
-  const [treats, setTreats] = useState(0);
-  const [tricks, setTricks] = useState(0);
-  const [stars, setStars] = useState(0);
-  const [popup, setPopup] = useState<{ text: string; color: string; key: number } | null>(null);
-  const [isWalking, setIsWalking] = useState(false);
-  const [jumpY, setJumpY] = useState(0);
-  const [isJumping, setIsJumping] = useState(false);
-  const [stageComplete, setStageComplete] = useState(false);
-  const [showIntro, setShowIntro] = useState(true);
-
-  const animRef = useRef<number>(0);
-  const walkingRef = useRef(false);
-  const scrollRef = useRef(0);
-  const popupKey = useRef(0);
   const containerRef = useRef<HTMLDivElement>(null);
-
-  const sky = SKY_COLORS[stage.id];
-  const ground = GROUND_COLORS[stage.id];
-  const progress = Math.min(scrollX / SCENE_LENGTH, 1);
+  const animRef = useRef<number>(0);
+  const messageTimeout = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => setShowIntro(false), 2000);
+    setItems(ROOM_ITEMS[room.id].map(i => ({ ...i })));
+    setDiscoveredCount(0);
+    setPoppyX(20);
+    setTargetX(20);
+    setActiveMessage(null);
+    setShowRoomIntro(true);
+    setPose('stand');
+    const timer = setTimeout(() => setShowRoomIntro(false), 1500);
     return () => clearTimeout(timer);
-  }, []);
-
-  const handleEncounter = useCallback((enc: Encounter) => {
-    if (enc.collected || enc.passed) return;
-
-    setEncounters(prev =>
-      prev.map(e => (e.id === enc.id ? { ...e, collected: true } : e))
-    );
-
-    popupKey.current++;
-    const key = popupKey.current;
-
-    if (enc.type === 'treat') {
-      setScore(s => s + 10);
-      setTreats(t => t + 1);
-      setPopup({ text: `${enc.emoji} +10`, color: '#34D399', key });
-    } else if (enc.type === 'trick') {
-      setScore(s => s + 25);
-      setTricks(t => t + 1);
-      setStars(s => Math.min(s + 1, 3));
-      setPopup({ text: `${enc.emoji} +25`, color: '#A78BFA', key });
-    } else {
-      setScore(s => Math.max(0, s - 15));
-      setPopup({ text: `${enc.emoji} -15`, color: '#F87171', key });
-    }
-
-    setTimeout(() => setPopup(p => (p?.key === key ? null : p)), 1200);
-  }, []);
-
-  const handleJump = useCallback(() => {
-    if (isJumping) return;
-    setIsJumping(true);
-    let t = 0;
-    const jumpAnim = () => {
-      t += 0.06;
-      const y = Math.sin(t * Math.PI) * 30;
-      setJumpY(y);
-      if (t < 1) {
-        requestAnimationFrame(jumpAnim);
-      } else {
-        setJumpY(0);
-        setIsJumping(false);
-      }
-    };
-    requestAnimationFrame(jumpAnim);
-  }, [isJumping]);
+  }, [room.id]);
 
   useEffect(() => {
     const tick = () => {
-      if (walkingRef.current && scrollRef.current < SCENE_LENGTH) {
-        scrollRef.current = Math.min(scrollRef.current + WALK_SPEED, SCENE_LENGTH);
-        setScrollX(scrollRef.current);
-      }
+      setPoppyX(prev => {
+        const diff = targetX - prev;
+        if (Math.abs(diff) < 1) {
+          setIsMoving(false);
+          return targetX;
+        }
+        setIsMoving(true);
+        return prev + diff * 0.06;
+      });
       animRef.current = requestAnimationFrame(tick);
     };
     animRef.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(animRef.current);
-  }, []);
+  }, [targetX]);
 
   useEffect(() => {
-    const poppyX = scrollRef.current;
-    encounters.forEach(enc => {
-      if (!enc.collected && !enc.passed && Math.abs(enc.x - poppyX) < 40) {
-        if (enc.type === 'obstacle' && isJumping) {
-          setEncounters(prev =>
-            prev.map(e => (e.id === enc.id ? { ...e, passed: true } : e))
-          );
-          setScore(s => s + 15);
-          popupKey.current++;
-          setPopup({ text: '✨ Dodged! +15', color: '#60A5FA', key: popupKey.current });
-          const k = popupKey.current;
-          setTimeout(() => setPopup(p => (p?.key === k ? null : p)), 1200);
-        } else {
-          handleEncounter(enc);
-        }
-      }
-    });
-  }, [scrollX, encounters, isJumping, handleEncounter]);
-
-  useEffect(() => {
-    if (scrollRef.current >= SCENE_LENGTH && !stageComplete) {
-      setStageComplete(true);
-      setIsWalking(false);
-      walkingRef.current = false;
-      setTimeout(() => {
-        onComplete({
-          stage: stage.id,
-          score,
-          treats,
-          tricks,
-          stars: Math.min(Math.floor(score / 50) + 1, 3),
-        });
-      }, 1500);
+    if (isMoving) {
+      setPose('walk');
+    } else if (activeMessage) {
+      setPose('sniff');
+    } else {
+      setPose('stand');
     }
-  }, [scrollX, stageComplete, onComplete, stage.id, score, treats, tricks]);
+  }, [isMoving, activeMessage]);
 
-  const startWalking = () => {
-    if (showIntro || stageComplete) return;
-    setIsWalking(true);
-    walkingRef.current = true;
-  };
-  const stopWalking = () => {
-    setIsWalking(false);
-    walkingRef.current = false;
+  const checkEncounters = useCallback((x: number) => {
+    const nearItem = items.find(item => !item.found && Math.abs(item.x - x) < 8);
+    if (nearItem) {
+      setItems(prev => prev.map(i => i.id === nearItem.id ? { ...i, found: true } : i));
+      setDiscoveredCount(c => c + 1);
+
+      if (messageTimeout.current) clearTimeout(messageTimeout.current);
+      setActiveMessage({ text: nearItem.message, emoji: nearItem.emoji });
+      setPose('wag');
+      messageTimeout.current = setTimeout(() => {
+        setActiveMessage(null);
+      }, 3500);
+    }
+  }, [items]);
+
+  useEffect(() => {
+    if (!isMoving && Math.abs(poppyX - targetX) < 2) {
+      checkEncounters(poppyX);
+    }
+  }, [isMoving, poppyX, targetX, checkEncounters]);
+
+  const handleTap = (e: React.PointerEvent) => {
+    if (showRoomIntro) return;
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const xPercent = ((e.clientX - rect.left) / rect.width) * 100;
+    const clampedX = Math.max(5, Math.min(90, xPercent));
+    setFacingRight(clampedX > poppyX);
+    setTargetX(clampedX);
   };
 
-  const viewWidth = 400;
-  const cameraX = Math.max(0, scrollX - viewWidth * 0.3);
+  const foundAll = discoveredCount === items.length;
 
   return (
     <div
       ref={containerRef}
       className="relative h-full w-full overflow-hidden select-none"
       style={{ touchAction: 'none' }}
-      onPointerDown={startWalking}
-      onPointerUp={stopWalking}
-      onPointerLeave={stopWalking}
+      onPointerDown={handleTap}
     >
-      {/* Sky gradient */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background: `linear-gradient(180deg, ${sky.top} 0%, ${sky.mid} 50%, ${sky.bottom} 100%)`,
-        }}
-      />
+      {/* Room background */}
+      <RoomBackground room={room.id} />
 
-      {/* Clouds */}
-      {[0, 1, 2, 3, 4].map(i => (
+      {/* Discoverable items */}
+      {items.map(item => (
         <motion.div
-          key={i}
-          className="absolute rounded-full opacity-30"
+          key={item.id}
+          className="absolute z-10"
           style={{
-            width: 80 + i * 30,
-            height: 25 + i * 5,
-            background: 'white',
-            top: `${8 + i * 6}%`,
-            left: `${((i * 23 + scrollX * (0.05 + i * 0.01)) % (window?.innerWidth ? window.innerWidth + 200 : 600)) - 100}px`,
-            filter: 'blur(4px)',
+            left: `${item.x}%`,
+            top: `${item.y}%`,
+            transform: 'translate(-50%, -50%)',
           }}
-        />
-      ))}
-
-      {/* Main scene SVG */}
-      <svg
-        className="absolute bottom-0 left-0 w-full"
-        style={{ height: '65%' }}
-        viewBox={`${cameraX} 0 ${viewWidth} 200`}
-        preserveAspectRatio="xMidYMax meet"
-      >
-        {/* Background hills */}
-        <path
-          d={`M${cameraX - 50},200 ${Array.from({ length: 20 }, (_, i) => {
-            const x = cameraX - 50 + i * 60;
-            const h = 80 + Math.sin(x * 0.01 + stageIndex) * 30;
-            return `Q${x + 30},${200 - h} ${x + 60},200`;
-          }).join(' ')} Z`}
-          fill={ground.grass}
-          opacity={0.3}
-        />
-
-        {/* Midground hills */}
-        <path
-          d={`M${cameraX - 50},200 ${Array.from({ length: 25 }, (_, i) => {
-            const x = cameraX - 50 + i * 40;
-            const h = 50 + Math.sin(x * 0.02 + stageIndex * 2) * 20;
-            return `Q${x + 20},${200 - h} ${x + 40},200`;
-          }).join(' ')} Z`}
-          fill={ground.grass}
-          opacity={0.5}
-        />
-
-        {/* Ground plane */}
-        <rect x={cameraX - 50} y={160} width={viewWidth + 100} height={40} fill={ground.dirt} />
-        <rect x={cameraX - 50} y={155} width={viewWidth + 100} height={10} fill={ground.grass} rx={3} />
-
-        {/* Path/road */}
-        <rect x={cameraX - 50} y={162} width={viewWidth + 100} height={8} fill={ground.path} opacity={0.5} rx={2} />
-
-        {/* Background scenery */}
-        {scenery
-          .filter(s => s.layer === 0 && s.x > cameraX - 60 && s.x < cameraX + viewWidth + 60)
-          .map((s, i) => (
-            <g key={`bg-${i}`} transform={`translate(0, 140)`} opacity={0.5}>
-              <SceneryItem type={s.type} x={s.x} stage={stage.id} />
-            </g>
-          ))}
-
-        {/* Foreground scenery */}
-        {scenery
-          .filter(s => s.layer === 1 && s.x > cameraX - 60 && s.x < cameraX + viewWidth + 60)
-          .map((s, i) => (
-            <g key={`fg-${i}`} transform={`translate(0, 155)`}>
-              <SceneryItem type={s.type} x={s.x} stage={stage.id} />
-            </g>
-          ))}
-
-        {/* Encounters */}
-        {encounters
-          .filter(e => !e.collected && !e.passed && e.x > cameraX - 30 && e.x < cameraX + viewWidth + 30)
-          .map(enc => (
-            <g key={enc.id}>
-              {enc.type === 'obstacle' && (
-                <rect
-                  x={enc.x - 8}
-                  y={140}
-                  width={16}
-                  height={20}
-                  rx={3}
-                  fill="#EF4444"
-                  opacity={0.3}
-                />
-              )}
-              <text
-                x={enc.x}
-                y={enc.type === 'obstacle' ? 148 : 145}
-                textAnchor="middle"
-                fontSize={enc.type === 'obstacle' ? 18 : 16}
-                style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))' }}
-              >
-                {enc.emoji}
-              </text>
-              {enc.type !== 'obstacle' && (
-                <motion.circle
-                  cx={enc.x}
-                  cy={148}
-                  r={12}
-                  fill="none"
-                  stroke={enc.type === 'treat' ? '#34D399' : '#A78BFA'}
-                  strokeWidth={1.5}
-                  opacity={0.5}
-                  animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.2, 0.5] }}
+          animate={item.found
+            ? { scale: [1, 1.3, 0], opacity: [1, 1, 0] }
+            : { y: [0, -4, 0] }
+          }
+          transition={item.found
+            ? { duration: 0.5 }
+            : { duration: 2, repeat: Infinity, ease: 'easeInOut', delay: Math.random() * 2 }
+          }
+        >
+          <div className={`text-3xl ${item.found ? '' : 'drop-shadow-md'}`}>
+            {!item.found && (
+              <div className="relative">
+                <span>{item.emoji}</span>
+                <motion.div
+                  className="absolute -inset-2 rounded-full border-2 border-amber-400/40"
+                  animate={{ scale: [1, 1.3, 1], opacity: [0.4, 0, 0.4] }}
                   transition={{ duration: 1.5, repeat: Infinity }}
                 />
-              )}
-            </g>
-          ))}
+              </div>
+            )}
+          </div>
+        </motion.div>
+      ))}
 
-        {/* Poppy character */}
-        <g transform={`translate(${scrollX}, ${130 - jumpY})`}>
-          <Poppy
-            stage={stage.id}
-            pose={stageComplete ? 'wag' : isJumping ? 'jump' : isWalking ? 'walk' : 'stand'}
-            size={55}
-          />
-        </g>
-
-        {/* Finish flag */}
-        {SCENE_LENGTH > cameraX - 30 && SCENE_LENGTH < cameraX + viewWidth + 30 && (
-          <g transform={`translate(${SCENE_LENGTH}, 130)`}>
-            <line x1={0} y1={0} x2={0} y2={-30} stroke="white" strokeWidth={2} />
-            <rect x={0} y={-30} width={16} height={10} fill="#F43F5E" rx={1} />
-            <text x={8} y={-22} textAnchor="middle" fontSize={6} fill="white">🏁</text>
-          </g>
-        )}
-      </svg>
+      {/* Poppy */}
+      <motion.div
+        className="absolute z-20"
+        style={{
+          left: `${poppyX}%`,
+          bottom: room.id === 'garden' ? '8%' : '12%',
+          transform: 'translateX(-50%)',
+        }}
+      >
+        <Poppy
+          pose={pose}
+          size={100}
+          flipX={!facingRight}
+        />
+      </motion.div>
 
       {/* HUD */}
-      <div className="absolute top-0 left-0 right-0 p-3 flex items-center justify-between z-20">
+      <div className="absolute top-0 left-0 right-0 p-3 flex items-center justify-between z-30">
         <button
-          onClick={onQuit}
-          className="px-3 py-1.5 rounded-xl text-sm font-semibold text-white/90 bg-white/15 backdrop-blur-md border border-white/20 active:scale-95 transition-transform"
+          onClick={(e) => { e.stopPropagation(); onQuit(); }}
+          className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold text-amber-900/70 bg-white/60 backdrop-blur-md border border-white/40 active:scale-95 transition-transform"
         >
           ✕
         </button>
 
-        <div className="flex items-center gap-3">
-          <div className="px-3 py-1.5 rounded-xl text-sm font-bold text-white bg-white/15 backdrop-blur-md border border-white/20">
-            {stage.emoji} {stage.label}
+        <div className="flex items-center gap-2">
+          <div className="px-3 py-1.5 rounded-xl text-sm font-bold text-amber-900 bg-white/60 backdrop-blur-md border border-white/40">
+            {room.emoji} {room.label}
           </div>
-          <div className="px-3 py-1.5 rounded-xl text-sm font-bold text-amber-200 bg-white/15 backdrop-blur-md border border-white/20">
-            ⭐ {score}
+          <div className="px-3 py-1.5 rounded-xl text-xs font-bold text-amber-700 bg-white/60 backdrop-blur-md border border-white/40">
+            {discoveredCount}/{items.length}
           </div>
         </div>
       </div>
 
-      {/* Progress bar */}
-      <div className="absolute top-14 left-4 right-4 z-20">
-        <div className="h-1.5 rounded-full bg-white/20 overflow-hidden">
-          <motion.div
-            className="h-full rounded-full"
-            style={{ background: `linear-gradient(90deg, ${sky.top}, ${sky.bottom})` }}
-            animate={{ width: `${progress * 100}%` }}
-            transition={{ ease: 'linear' }}
+      {/* Discovery counter dots */}
+      <div className="absolute top-14 left-0 right-0 flex justify-center gap-1.5 z-30">
+        {items.map((item, i) => (
+          <div
+            key={i}
+            className={`w-2 h-2 rounded-full transition-colors duration-300 ${
+              item.found ? 'bg-amber-500' : 'bg-white/30'
+            }`}
           />
-        </div>
+        ))}
       </div>
 
-      {/* Jump button */}
-      {!showIntro && !stageComplete && (
-        <motion.button
-          className="absolute bottom-8 right-6 z-30 w-16 h-16 rounded-full bg-white/20 backdrop-blur-md border-2 border-white/30 flex items-center justify-center text-2xl font-bold text-white active:scale-90 transition-transform"
-          onPointerDown={e => {
-            e.stopPropagation();
-            handleJump();
-          }}
-          whileTap={{ scale: 0.85 }}
+      {/* Room navigation arrows */}
+      {roomIndex > 0 && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onPrevRoom(); }}
+          className="absolute left-3 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-white/50 backdrop-blur-md border border-white/40 flex items-center justify-center text-amber-900/60 text-lg font-bold active:scale-90 transition-transform"
         >
-          ↑
-        </motion.button>
+          ‹
+        </button>
+      )}
+      {roomIndex < totalRooms - 1 && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onNextRoom(); }}
+          className="absolute right-3 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-white/50 backdrop-blur-md border border-white/40 flex items-center justify-center text-amber-900/60 text-lg font-bold active:scale-90 transition-transform"
+        >
+          ›
+        </button>
       )}
 
-      {/* Hold to walk hint */}
-      {!showIntro && !stageComplete && !isWalking && scrollX < 50 && (
+      {/* All found celebration */}
+      {foundAll && (
         <motion.div
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 px-4 py-2 rounded-xl bg-black/40 backdrop-blur-sm text-white/80 text-sm font-medium"
-          animate={{ opacity: [0.5, 1, 0.5] }}
-          transition={{ duration: 2, repeat: Infinity }}
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 px-5 py-2.5 rounded-2xl bg-amber-500 text-white text-sm font-bold shadow-lg"
         >
-          Hold anywhere to walk
+          🎉 All discoveries found!
+          {roomIndex < totalRooms - 1 && (
+            <span className="ml-2 opacity-80">→ Next room</span>
+          )}
         </motion.div>
       )}
 
-      {/* Score popup */}
+      {/* Message bubble */}
       <AnimatePresence>
-        {popup && (
+        {activeMessage && (
           <motion.div
-            key={popup.key}
-            initial={{ y: 0, opacity: 1, scale: 0.8 }}
-            animate={{ y: -40, opacity: 1, scale: 1 }}
-            exit={{ y: -60, opacity: 0 }}
-            transition={{ duration: 0.6 }}
-            className="absolute top-1/3 left-1/2 -translate-x-1/2 z-30 px-4 py-2 rounded-xl font-bold text-lg"
-            style={{ color: popup.color, textShadow: '0 2px 8px rgba(0,0,0,0.4)' }}
+            initial={{ y: 20, opacity: 0, scale: 0.9 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            exit={{ y: -10, opacity: 0, scale: 0.95 }}
+            className="absolute bottom-28 left-4 right-4 z-30 flex justify-center"
           >
-            {popup.text}
+            <div className="px-4 py-3 rounded-2xl bg-white/90 backdrop-blur-md border border-white/60 shadow-lg">
+              <p className="text-amber-900 text-sm font-medium text-center">
+                <span className="text-lg mr-1">{activeMessage.emoji}</span>
+                {activeMessage.text}
+              </p>
+            </div>
+            <div className="w-3 h-3 bg-white/90 rotate-45 mx-auto -mt-1.5 border-r border-b border-white/60" />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Stage intro overlay */}
+      {/* Tap hint */}
+      {!showRoomIntro && discoveredCount === 0 && !isMoving && (
+        <motion.div
+          className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 px-4 py-2 rounded-xl bg-black/20 backdrop-blur-sm text-white/70 text-xs font-medium"
+          animate={{ opacity: [0.4, 0.8, 0.4] }}
+          transition={{ duration: 2.5, repeat: Infinity }}
+        >
+          Tap to move Poppy • Find all the hidden items!
+        </motion.div>
+      )}
+
+      {/* Room intro overlay */}
       <AnimatePresence>
-        {showIntro && (
+        {showRoomIntro && (
           <motion.div
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-            className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-black/50 backdrop-blur-sm"
+            transition={{ duration: 0.4 }}
+            className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm"
           >
             <motion.div
               initial={{ scale: 0.5, opacity: 0 }}
@@ -544,31 +490,9 @@ export default function GameScene({ stage, stageIndex, onComplete, onQuit }: Pro
               transition={{ type: 'spring', stiffness: 200 }}
               className="text-center"
             >
-              <div className="text-6xl mb-3">{stage.emoji}</div>
-              <h2 className="text-3xl font-black text-white mb-1">{stage.label}</h2>
-              <p className="text-white/70 text-lg">{stage.age}</p>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Stage complete overlay */}
-      <AnimatePresence>
-        {stageComplete && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="absolute inset-0 z-40 flex items-center justify-center bg-black/40 backdrop-blur-sm"
-          >
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: 'spring', stiffness: 200 }}
-              className="text-center"
-            >
-              <div className="text-5xl mb-2">🎉</div>
-              <h2 className="text-2xl font-black text-white">Stage Complete!</h2>
-              <p className="text-amber-200 text-lg font-bold mt-1">Score: {score}</p>
+              <div className="text-5xl mb-2">{room.emoji}</div>
+              <h2 className="text-2xl font-black text-white">{room.label}</h2>
+              <p className="text-white/60 text-sm mt-1">Find {items.length} hidden items</p>
             </motion.div>
           </motion.div>
         )}

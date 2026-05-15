@@ -1,206 +1,286 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { LifeStage } from '../page';
 
-type Pose = 'stand' | 'walk' | 'wag' | 'sit' | 'jump' | 'sleep';
+export type Pose = 'stand' | 'walk' | 'sit' | 'sniff' | 'sleep' | 'wag' | 'jump';
 
 interface Props {
-  stage: LifeStage;
   pose?: Pose;
   size?: number;
   className?: string;
   flipX?: boolean;
 }
 
-const stageColors: Record<LifeStage, { body: string; belly: string; accent: string; collar: string }> = {
-  puppy:      { body: '#D97706', belly: '#FCD34D', accent: '#F59E0B', collar: '#EC4899' },
-  junior:     { body: '#C2410C', belly: '#FDBA74', accent: '#EA580C', collar: '#8B5CF6' },
-  adolescent: { body: '#92400E', belly: '#FCA5A5', accent: '#B45309', collar: '#06B6D4' },
-  adult:      { body: '#78350F', belly: '#FDE68A', accent: '#A16207', collar: '#10B981' },
-  senior:     { body: '#A0845C', belly: '#E8D5B7', accent: '#8B7355', collar: '#F43F5E' },
-};
-
-const stageProportions: Record<LifeStage, { headScale: number; bodyLen: number; legLen: number }> = {
-  puppy:      { headScale: 1.35, bodyLen: 0.7, legLen: 0.65 },
-  junior:     { headScale: 1.15, bodyLen: 0.85, legLen: 0.8 },
-  adolescent: { headScale: 1.0, bodyLen: 1.0, legLen: 1.1 },
-  adult:      { headScale: 1.0, bodyLen: 1.0, legLen: 1.0 },
-  senior:     { headScale: 1.05, bodyLen: 1.05, legLen: 0.9 },
-};
-
-export default function Poppy({ stage, pose = 'stand', size = 120, className, flipX = false }: Props) {
-  const c = stageColors[stage];
-  const p = stageProportions[stage];
+export default function Poppy({ pose = 'stand', size = 120, className, flipX = false }: Props) {
   const isWalking = pose === 'walk';
   const isWagging = pose === 'wag' || pose === 'walk';
-  const isJumping = pose === 'jump';
+  const isSniffing = pose === 'sniff';
+  const isSitting = pose === 'sit';
   const isSleeping = pose === 'sleep';
 
-  const bodyW = 52 * p.bodyLen;
-  const cx = 50, cy = 48;
-  const headR = 14 * p.headScale;
-  const headX = cx - bodyW / 2 - headR * 0.4;
-  const headY = cy - 7;
-  const legH = 14 * p.legLen;
+  const bodyColor = '#B8510D';
+  const darkFur = '#8B3A06';
+  const lightFur = '#D4782F';
+  const bellyColor = '#E8A44E';
+  const noseColor = '#1a1a1a';
+  const eyeColor = '#2D1600';
+  const tongueColor = '#E8556D';
+  const collarColor = '#CC2936';
+  const tagColor = '#FFD700';
 
   return (
     <svg
       width={size}
-      height={size * 0.85}
-      viewBox="0 0 100 85"
+      height={size * 0.7}
+      viewBox="0 0 160 112"
       className={className}
       style={{ overflow: 'visible', transform: flipX ? 'scaleX(-1)' : undefined }}
     >
       {/* Shadow */}
-      <ellipse cx={cx} cy={78} rx={bodyW / 2 + 5} ry={3} fill="rgba(0,0,0,0.15)" />
+      <ellipse cx={80} cy={108} rx={50} ry={4} fill="rgba(0,0,0,0.12)" />
 
       {/* Tail */}
       <motion.path
-        d={`M${cx + bodyW / 2 - 2},${cy - 4} Q${cx + bodyW / 2 + 8},${cy - 18} ${cx + bodyW / 2 + 14},${cy - 22}`}
-        stroke={c.body}
-        strokeWidth={3.5}
+        d={isSitting
+          ? 'M128,68 Q140,55 145,48 Q148,42 144,38'
+          : 'M128,52 Q142,38 148,30 Q152,24 148,20'
+        }
+        stroke={bodyColor}
+        strokeWidth={5}
         strokeLinecap="round"
         fill="none"
-        animate={isWagging ? { rotate: [0, 20, -20, 20, 0] } : {}}
-        transition={isWagging ? { duration: 0.4, repeat: Infinity, ease: 'easeInOut' } : {}}
-        style={{ transformOrigin: `${cx + bodyW / 2 - 2}px ${cy - 4}px` }}
+        animate={isWagging ? { rotate: [0, 15, -15, 15, 0] } : {}}
+        transition={isWagging ? { duration: 0.35, repeat: Infinity, ease: 'easeInOut' } : {}}
+        style={{ transformOrigin: isSitting ? '128px 68px' : '128px 52px' }}
       />
 
-      {/* Body */}
-      <ellipse cx={cx} cy={cy} rx={bodyW / 2} ry={10} fill={c.body} />
-      <ellipse cx={cx} cy={cy + 2} rx={bodyW / 2 - 5} ry={6} fill={c.belly} />
+      {/* Back legs */}
+      {!isSleeping && (
+        <>
+          <motion.g
+            animate={isWalking ? { rotate: [0, -18, 18, 0] } : {}}
+            transition={isWalking ? { duration: 0.35, repeat: Infinity } : {}}
+            style={{ transformOrigin: '108px 68px' }}
+          >
+            <rect x={104} y={isSitting ? 72 : 68} width={7} height={isSitting ? 18 : 28} rx={3.5} fill={darkFur} />
+            {!isSitting && <ellipse cx={107.5} cy={97} rx={5} ry={3.5} fill={bodyColor} />}
+          </motion.g>
+          <motion.g
+            animate={isWalking ? { rotate: [0, 18, -18, 0] } : {}}
+            transition={isWalking ? { duration: 0.35, repeat: Infinity, delay: 0.08 } : {}}
+            style={{ transformOrigin: '116px 68px' }}
+          >
+            <rect x={112} y={isSitting ? 72 : 68} width={7} height={isSitting ? 18 : 28} rx={3.5} fill={bodyColor} />
+            {!isSitting && <ellipse cx={115.5} cy={97} rx={5} ry={3.5} fill={lightFur} />}
+          </motion.g>
+          {isSitting && (
+            <ellipse cx={112} cy={88} rx={12} ry={5} fill={bodyColor} />
+          )}
+        </>
+      )}
+
+      {/* Body - long sausage shape */}
+      <ellipse
+        cx={80}
+        cy={isSitting ? 62 : 56}
+        rx={48}
+        ry={isSitting ? 16 : 14}
+        fill={bodyColor}
+      />
+      {/* Belly highlight */}
+      <ellipse
+        cx={78}
+        cy={isSitting ? 66 : 60}
+        rx={38}
+        ry={isSitting ? 9 : 7}
+        fill={bellyColor}
+        opacity={0.5}
+      />
+      {/* Back fur detail */}
+      <ellipse
+        cx={85}
+        cy={isSitting ? 52 : 46}
+        rx={35}
+        ry={6}
+        fill={darkFur}
+        opacity={0.3}
+      />
+
+      {/* Front legs */}
+      {!isSleeping && (
+        <>
+          <motion.g
+            animate={isWalking ? { rotate: [0, 18, -18, 0] } : {}}
+            transition={isWalking ? { duration: 0.35, repeat: Infinity } : {}}
+            style={{ transformOrigin: '44px 65px' }}
+          >
+            <rect x={40} y={65} width={7} height={isSitting ? 26 : 30} rx={3.5} fill={darkFur} />
+            <ellipse cx={43.5} cy={isSitting ? 92 : 96} rx={5} ry={3.5} fill={bodyColor} />
+          </motion.g>
+          <motion.g
+            animate={isWalking ? { rotate: [0, -18, 18, 0] } : {}}
+            transition={isWalking ? { duration: 0.35, repeat: Infinity, delay: 0.08 } : {}}
+            style={{ transformOrigin: '52px 65px' }}
+          >
+            <rect x={48} y={65} width={7} height={isSitting ? 26 : 30} rx={3.5} fill={bodyColor} />
+            <ellipse cx={51.5} cy={isSitting ? 92 : 96} rx={5} ry={3.5} fill={lightFur} />
+          </motion.g>
+        </>
+      )}
+
+      {/* Sleeping body - curled */}
+      {isSleeping && (
+        <>
+          <ellipse cx={80} cy={78} rx={45} ry={20} fill={bodyColor} />
+          <ellipse cx={80} cy={82} rx={35} ry={12} fill={bellyColor} opacity={0.4} />
+        </>
+      )}
 
       {/* Collar */}
-      <ellipse cx={cx - bodyW / 2 + 8} cy={cy - 2} rx={5} ry={3} fill={c.collar} opacity={0.9} />
-      <circle cx={cx - bodyW / 2 + 8} cy={cy + 1} r={1.5} fill="#FFD700" />
+      <rect
+        x={30}
+        y={isSitting ? 52 : 48}
+        width={14}
+        height={6}
+        rx={3}
+        fill={collarColor}
+      />
+      <circle cx={37} cy={isSitting ? 58 : 54} r={2.5} fill={tagColor} />
 
-      {/* Legs */}
-      {!isSleeping && (
-        <>
-          {[0, 1, 2, 3].map(i => {
-            const isFront = i < 2;
-            const baseX = isFront
-              ? cx - bodyW / 2 + 7 + i * 7
-              : cx + bodyW / 2 - 16 + (i - 2) * 7;
-            return (
-              <motion.rect
-                key={i}
-                x={baseX}
-                y={cy + 8}
-                width={4.5}
-                height={legH}
-                rx={2.2}
-                fill={c.body}
-                animate={isWalking ? {
-                  rotate: i % 2 === 0 ? [0, 20, -20, 0] : [0, -20, 20, 0],
-                } : isJumping ? { y: [cy + 8, cy + 4, cy + 8] } : {}}
-                transition={isWalking ? {
-                  duration: 0.35,
-                  repeat: Infinity,
-                  delay: i * 0.08,
-                } : {}}
-                style={{ transformOrigin: `${baseX + 2}px ${cy + 8}px` }}
-              />
-            );
-          })}
-          {/* Paws */}
-          {[0, 1, 2, 3].map(i => {
-            const isFront = i < 2;
-            const baseX = isFront
-              ? cx - bodyW / 2 + 7 + i * 7
-              : cx + bodyW / 2 - 16 + (i - 2) * 7;
-            return (
-              <ellipse
-                key={`paw-${i}`}
-                cx={baseX + 2.2}
-                cy={cy + 8 + legH}
-                rx={3}
-                ry={2}
-                fill={c.accent}
-              />
-            );
-          })}
-        </>
-      )}
+      {/* Chest tuft */}
+      <ellipse cx={34} cy={isSitting ? 60 : 56} rx={6} ry={8} fill={lightFur} opacity={0.6} />
 
       {/* Head */}
-      <circle cx={headX} cy={headY} r={headR} fill={c.body} />
-
-      {/* Ear */}
-      <motion.ellipse
-        cx={headX + headR * 0.6}
-        cy={headY - headR * 0.3}
-        rx={5}
-        ry={11}
-        fill={c.accent}
-        transform={`rotate(30, ${headX + headR * 0.6}, ${headY - headR * 0.3})`}
-        animate={isWagging ? { rotate: [30, 35, 25, 30] } : {}}
-        transition={isWagging ? { duration: 0.5, repeat: Infinity } : {}}
-        style={{ transformOrigin: `${headX + headR * 0.6}px ${headY - headR * 0.6}px` }}
-      />
-
-      {/* Snout */}
-      <ellipse
-        cx={headX - headR * 0.5}
-        cy={headY + 3}
-        rx={headR * 0.55}
-        ry={headR * 0.38}
-        fill={stage === 'senior' ? '#C4B39A' : c.belly}
-      />
-
-      {/* Nose */}
-      <ellipse cx={headX - headR * 0.85} cy={headY + 2} rx={3} ry={2.2} fill="#1a1a1a" />
-      <ellipse cx={headX - headR * 0.82} cy={headY + 1} rx={1.2} ry={0.8} fill="#444" />
-
-      {/* Eyes */}
-      {isSleeping ? (
-        <path
-          d={`M${headX - 5},${headY - 2} Q${headX - 2},${headY - 4} ${headX + 1},${headY - 2}`}
-          fill="none" stroke="#1a1a1a" strokeWidth={1.5} strokeLinecap="round"
+      <motion.g
+        animate={isSniffing ? { rotate: [0, -5, 5, -3, 0], y: [0, 2, 0, 2, 0] } : {}}
+        transition={isSniffing ? { duration: 1.2, repeat: Infinity } : {}}
+      >
+        {/* Skull */}
+        <ellipse
+          cx={24}
+          cy={isSitting ? 42 : 38}
+          rx={18}
+          ry={16}
+          fill={bodyColor}
         />
-      ) : (
-        <>
-          <circle cx={headX - 1} cy={headY - 4} r={3.5} fill="white" />
-          <circle cx={headX - 1.5} cy={headY - 4} r={2.2} fill="#1a1a1a" />
-          <circle cx={headX - 2.5} cy={headY - 5} r={0.9} fill="white" />
-        </>
-      )}
+        {/* Top of head - darker */}
+        <ellipse
+          cx={26}
+          cy={isSitting ? 34 : 30}
+          rx={14}
+          ry={8}
+          fill={darkFur}
+          opacity={0.4}
+        />
 
-      {/* Mouth / Tongue */}
-      {isWagging && !isSleeping && (
-        <>
+        {/* Floppy ear */}
+        <motion.ellipse
+          cx={34}
+          cy={isSitting ? 34 : 30}
+          rx={8}
+          ry={16}
+          fill={darkFur}
+          transform={`rotate(20, 34, ${isSitting ? 30 : 26})`}
+          animate={isWagging ? { rotate: [20, 25, 15, 20] } : {}}
+          transition={isWagging ? { duration: 0.5, repeat: Infinity } : {}}
+          style={{ transformOrigin: `34px ${isSitting ? 28 : 24}px` }}
+        />
+
+        {/* Snout */}
+        <ellipse
+          cx={8}
+          cy={isSitting ? 44 : 40}
+          rx={14}
+          ry={10}
+          fill={lightFur}
+        />
+        {/* Snout bridge */}
+        <ellipse
+          cx={12}
+          cy={isSitting ? 40 : 36}
+          rx={10}
+          ry={6}
+          fill={bodyColor}
+        />
+
+        {/* Nose */}
+        <ellipse cx={-3} cy={isSitting ? 40 : 36} rx={5} ry={4} fill={noseColor} />
+        <ellipse cx={-4} cy={isSitting ? 38 : 34} rx={2} ry={1.2} fill="#444" />
+
+        {/* Eye */}
+        {isSleeping ? (
           <path
-            d={`M${headX - headR * 0.6},${headY + 5.5} Q${headX - headR * 0.3},${headY + 9} ${headX},${headY + 5.5}`}
-            fill="none" stroke="#B91C1C" strokeWidth={1.2} strokeLinecap="round"
+            d="M18,34 Q22,31 26,34"
+            fill="none"
+            stroke={eyeColor}
+            strokeWidth={2}
+            strokeLinecap="round"
           />
-          <motion.ellipse
-            cx={headX - headR * 0.3}
-            cy={headY + 8.5}
-            rx={2.5}
-            ry={3.5}
-            fill="#F87171"
-            animate={{ scaleY: [1, 1.15, 1] }}
-            transition={{ duration: 0.6, repeat: Infinity }}
-          />
-        </>
-      )}
+        ) : (
+          <>
+            <circle cx={22} cy={isSitting ? 36 : 32} r={5.5} fill="white" />
+            <circle cx={20.5} cy={isSitting ? 35.5 : 31.5} r={3.5} fill={eyeColor} />
+            <circle cx={19} cy={isSitting ? 34 : 30} r={1.5} fill="white" />
+            {/* Eyebrow */}
+            <path
+              d={`M16,${isSitting ? 30 : 26} Q22,${isSitting ? 27 : 23} 28,${isSitting ? 29 : 25}`}
+              fill="none"
+              stroke={darkFur}
+              strokeWidth={1.8}
+              strokeLinecap="round"
+            />
+          </>
+        )}
 
-      {/* Cheek blush */}
-      {!isSleeping && (
-        <ellipse cx={headX + 4} cy={headY + 2} rx={3} ry={1.8} fill="#FECACA" opacity={0.5} />
-      )}
+        {/* Mouth */}
+        <path
+          d={`M2,${isSitting ? 46 : 42} Q8,${isSitting ? 49 : 45} 14,${isSitting ? 46 : 42}`}
+          fill="none"
+          stroke={darkFur}
+          strokeWidth={1.2}
+          strokeLinecap="round"
+        />
+
+        {/* Tongue - visible when wagging */}
+        {isWagging && !isSleeping && (
+          <motion.ellipse
+            cx={8}
+            cy={isSitting ? 50 : 46}
+            rx={3}
+            ry={5}
+            fill={tongueColor}
+            animate={{ scaleY: [1, 1.15, 1] }}
+            transition={{ duration: 0.5, repeat: Infinity }}
+          />
+        )}
+
+        {/* Cheek */}
+        {!isSleeping && (
+          <ellipse
+            cx={16}
+            cy={isSitting ? 46 : 42}
+            rx={4}
+            ry={2.5}
+            fill="#F4A0A0"
+            opacity={0.35}
+          />
+        )}
+
+        {/* Whisker dots */}
+        <circle cx={2} cy={isSitting ? 44 : 40} r={0.8} fill={darkFur} />
+        <circle cx={0} cy={isSitting ? 46 : 42} r={0.8} fill={darkFur} />
+      </motion.g>
 
       {/* Sleep z's */}
       {isSleeping && (
         <>
-          <motion.text x={headX - 18} y={headY - 14} fill="white" fontSize={7} fontWeight="bold" opacity={0.7}
-            animate={{ y: [headY - 14, headY - 24], opacity: [0.7, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
+          <motion.text x={0} y={20} fill="#7C6DA6" fontSize={10} fontWeight="bold" opacity={0.6}
+            animate={{ y: [20, 8], opacity: [0.6, 0] }}
+            transition={{ duration: 2.5, repeat: Infinity }}
           >z</motion.text>
-          <motion.text x={headX - 12} y={headY - 20} fill="white" fontSize={9} fontWeight="bold" opacity={0.5}
-            animate={{ y: [headY - 20, headY - 32], opacity: [0.5, 0] }}
-            transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
+          <motion.text x={8} y={12} fill="#7C6DA6" fontSize={14} fontWeight="bold" opacity={0.4}
+            animate={{ y: [12, -2], opacity: [0.4, 0] }}
+            transition={{ duration: 2.5, repeat: Infinity, delay: 0.6 }}
           >Z</motion.text>
         </>
       )}

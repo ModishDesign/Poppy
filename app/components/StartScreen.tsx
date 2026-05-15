@@ -9,35 +9,36 @@ interface Props {
 
 export default function StartScreen({ onPlay }: Props) {
   return (
-    <div className="relative h-full w-full flex flex-col items-center justify-center overflow-hidden bg-gradient-to-b from-violet-600 via-fuchsia-500 to-orange-400">
-      {/* Floating decorative circles */}
-      {[...Array(6)].map((_, i) => (
+    <div className="relative h-full w-full flex flex-col items-center justify-center overflow-hidden bg-gradient-to-b from-amber-50 via-orange-50 to-amber-100">
+      {/* Warm light rays */}
+      {[...Array(5)].map((_, i) => (
         <motion.div
           key={i}
-          className="absolute rounded-full opacity-20"
+          className="absolute opacity-10"
           style={{
-            width: 60 + i * 40,
-            height: 60 + i * 40,
-            left: `${10 + i * 15}%`,
-            top: `${15 + (i % 3) * 25}%`,
-            background: `radial-gradient(circle, rgba(255,255,255,0.4), transparent)`,
+            width: 200 + i * 60,
+            height: 200 + i * 60,
+            borderRadius: '50%',
+            left: `${30 + i * 5}%`,
+            top: `${20 + (i % 3) * 15}%`,
+            background: 'radial-gradient(circle, rgba(251,191,36,0.3), transparent)',
           }}
-          animate={{ y: [0, -15, 0], scale: [1, 1.05, 1] }}
-          transition={{ duration: 3 + i * 0.5, repeat: Infinity, ease: 'easeInOut', delay: i * 0.3 }}
+          animate={{ scale: [1, 1.1, 1], opacity: [0.08, 0.15, 0.08] }}
+          transition={{ duration: 4 + i * 0.5, repeat: Infinity, ease: 'easeInOut', delay: i * 0.4 }}
         />
       ))}
 
       {/* Title */}
       <motion.div
-        initial={{ y: -40, opacity: 0 }}
+        initial={{ y: -30, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 120 }}
-        className="text-center z-10 mb-4"
+        className="text-center z-10 mb-6"
       >
-        <h1 className="text-6xl font-black text-white tracking-tight drop-shadow-lg">
+        <h1 className="text-5xl font-black text-amber-900 tracking-tight">
           Poppy
         </h1>
-        <p className="text-xl font-medium text-white/80 mt-1">the Dachshund</p>
+        <p className="text-lg font-medium text-amber-700/70 mt-1">the Dachshund</p>
       </motion.div>
 
       {/* Poppy character */}
@@ -45,10 +46,10 @@ export default function StartScreen({ onPlay }: Props) {
         initial={{ scale: 0.5, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 0.3, type: 'spring' }}
-        className="z-10 my-6"
+        className="z-10 my-4"
         style={{ animation: 'float 3s ease-in-out infinite' }}
       >
-        <Poppy stage="puppy" pose="wag" size={180} />
+        <Poppy pose="wag" size={200} />
       </motion.div>
 
       {/* Tagline */}
@@ -56,25 +57,25 @@ export default function StartScreen({ onPlay }: Props) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.6 }}
-        className="text-white/70 text-sm text-center max-w-xs px-4 z-10 mb-8"
+        className="text-amber-800/60 text-sm text-center max-w-xs px-4 z-10 mb-8"
       >
-        Walk through five life stages of adventure, tricks, and treats!
+        Explore the house and garden with Poppy!
       </motion.p>
 
       {/* Play button */}
       <motion.button
-        initial={{ y: 30, opacity: 0 }}
+        initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.8, type: 'spring' }}
         whileTap={{ scale: 0.95 }}
         onClick={onPlay}
-        className="z-10 px-12 py-4 rounded-2xl text-xl font-bold text-violet-700 bg-white shadow-xl shadow-black/20 active:shadow-lg transition-shadow"
+        className="z-10 px-12 py-4 rounded-2xl text-xl font-bold text-white bg-amber-600 shadow-lg shadow-amber-600/30 active:shadow-md transition-shadow"
       >
-        Play
+        Explore
       </motion.button>
 
-      {/* Ground decoration */}
-      <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-orange-500/40 to-transparent" />
+      {/* Floor */}
+      <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-amber-200/50 to-transparent" />
     </div>
   );
 }

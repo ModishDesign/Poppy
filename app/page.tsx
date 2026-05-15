@@ -3,51 +3,42 @@
 import { useState } from 'react';
 import StartScreen from './components/StartScreen';
 import GameScene from './components/GameScene';
-import ResultsScreen from './components/ResultsScreen';
 
-export type Screen = 'start' | 'playing' | 'results';
-export type LifeStage = 'puppy' | 'junior' | 'adolescent' | 'adult' | 'senior';
+export type Screen = 'start' | 'playing';
 
-export interface StageResult {
-  stage: LifeStage;
-  score: number;
-  treats: number;
-  tricks: number;
-  stars: number;
-}
+export type Room = 'living-room' | 'kitchen' | 'bedroom' | 'garden';
 
-export const STAGES: { id: LifeStage; label: string; age: string; gradient: string; emoji: string }[] = [
-  { id: 'puppy', label: 'Puppy', age: '8 weeks', gradient: 'from-emerald-400 via-teal-400 to-cyan-400', emoji: '🌱' },
-  { id: 'junior', label: 'Junior', age: '6 months', gradient: 'from-amber-400 via-orange-400 to-rose-400', emoji: '🌻' },
-  { id: 'adolescent', label: 'Adolescent', age: '1 year', gradient: 'from-violet-500 via-purple-500 to-fuchsia-500', emoji: '⚡' },
-  { id: 'adult', label: 'Adult', age: '3 years', gradient: 'from-blue-500 via-indigo-500 to-violet-500', emoji: '🌟' },
-  { id: 'senior', label: 'Senior', age: '10 years', gradient: 'from-rose-400 via-pink-400 to-amber-300', emoji: '🌅' },
+export const ROOMS: { id: Room; label: string; emoji: string }[] = [
+  { id: 'living-room', label: 'Living Room', emoji: '🛋️' },
+  { id: 'kitchen', label: 'Kitchen', emoji: '🍳' },
+  { id: 'bedroom', label: 'Bedroom', emoji: '🛏️' },
+  { id: 'garden', label: 'Garden', emoji: '🌻' },
 ];
 
 export default function Home() {
   const [screen, setScreen] = useState<Screen>('start');
-  const [currentStage, setCurrentStage] = useState(0);
-  const [results, setResults] = useState<StageResult[]>([]);
+  const [currentRoom, setCurrentRoom] = useState(0);
 
   const handlePlay = () => {
-    setCurrentStage(0);
-    setResults([]);
+    setCurrentRoom(0);
     setScreen('playing');
   };
 
-  const handleStageComplete = (result: StageResult) => {
-    setResults(prev => [...prev, result]);
-    if (currentStage < STAGES.length - 1) {
-      setCurrentStage(prev => prev + 1);
-    } else {
-      setScreen('results');
+  const handleNextRoom = () => {
+    if (currentRoom < ROOMS.length - 1) {
+      setCurrentRoom(prev => prev + 1);
     }
   };
 
-  const handleRestart = () => {
+  const handlePrevRoom = () => {
+    if (currentRoom > 0) {
+      setCurrentRoom(prev => prev - 1);
+    }
+  };
+
+  const handleQuit = () => {
     setScreen('start');
-    setCurrentStage(0);
-    setResults([]);
+    setCurrentRoom(0);
   };
 
   return (
@@ -55,14 +46,13 @@ export default function Home() {
       {screen === 'start' && <StartScreen onPlay={handlePlay} />}
       {screen === 'playing' && (
         <GameScene
-          stage={STAGES[currentStage]}
-          stageIndex={currentStage}
-          onComplete={handleStageComplete}
-          onQuit={handleRestart}
+          room={ROOMS[currentRoom]}
+          roomIndex={currentRoom}
+          totalRooms={ROOMS.length}
+          onNextRoom={handleNextRoom}
+          onPrevRoom={handlePrevRoom}
+          onQuit={handleQuit}
         />
-      )}
-      {screen === 'results' && (
-        <ResultsScreen results={results} onRestart={handleRestart} />
       )}
     </div>
   );
