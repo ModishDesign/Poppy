@@ -348,7 +348,7 @@ export default function GameScene({ location, onSceneEnd, onQuit }: Props) {
   const [showIntro, setShowIntro] = useState(true);
   const [sceneFinished, setSceneFinished] = useState(false);
   const [sparklePos, setSparklePos] = useState<{ x: number; y: number } | null>(null);
-  const [flipPoppy, setFlipPoppy] = useState(true);
+  const [flipPoppy, setFlipPoppy] = useState(false);
   const [nearItem, setNearItem] = useState<string | null>(null);
 
   // walking direction state
@@ -515,8 +515,8 @@ export default function GameScene({ location, onSceneEnd, onQuit }: Props) {
     scrollRef.current = newScroll;
     setScrollX(newScroll);
     // Face direction of scroll
-    if (dx > 0) setFlipPoppy(true);
-    else if (dx < 0) setFlipPoppy(false);
+    if (dx > 0) setFlipPoppy(false);
+    else if (dx < 0) setFlipPoppy(true);
     setPoppyPose('walk');
   };
 
@@ -615,7 +615,7 @@ export default function GameScene({ location, onSceneEnd, onQuit }: Props) {
   const startLeft = () => {
     if (showIntro || sceneFinished) return;
     walkLeftRef.current = true;
-    setFlipPoppy(false);
+    setFlipPoppy(true);
   };
   const stopLeft = () => {
     walkLeftRef.current = false;
@@ -624,7 +624,7 @@ export default function GameScene({ location, onSceneEnd, onQuit }: Props) {
   const startRight = () => {
     if (showIntro || sceneFinished) return;
     walkRightRef.current = true;
-    setFlipPoppy(true);
+    setFlipPoppy(false);
   };
   const stopRight = () => {
     walkRightRef.current = false;
