@@ -21,6 +21,7 @@ export interface Discoverable {
   emoji: string;
   label: string;
   xPos: number; // position along the horizontal scene (0-100)
+  height: 'ground' | 'low' | 'high'; // vertical position — high items need a jump
   message: string;
   found: boolean;
 }
