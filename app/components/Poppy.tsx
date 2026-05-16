@@ -61,46 +61,56 @@ export default function Poppy({ pose = 'stand', size = 120, className, flipX = f
         transition={isWalking ? { duration: walkDuration / 2, repeat: Infinity, ease: walkEase } : {}}
       />
 
-      {/* Tail */}
-      <motion.path
+      {/* Tail — fixed base */}
+      <path
         d={isSitting
-          ? 'M128,66 Q140,53 145,46 Q148,40 144,36'
+          ? 'M128,66 Q137,56 142,48'
           : isJumping
-          ? 'M128,48 Q145,32 150,24 Q153,18 149,14'
-          : 'M128,52 Q142,38 148,30 Q152,24 148,20'
+          ? 'M128,48 Q140,36 146,28'
+          : 'M128,52 Q138,42 144,34'
         }
         stroke={bodyColor}
         strokeWidth={5}
         strokeLinecap="round"
         fill="none"
-        animate={isWagging
-          ? { rotate: [0, 20, -20, 20, -10, 0] }
+      />
+      {/* Tail — wagging tip only */}
+      <motion.path
+        d={isSitting
+          ? 'M142,48 Q146,42 144,36'
           : isJumping
-          ? { rotate: [0, 10, -5, 10, 0] }
+          ? 'M146,28 Q150,22 148,16'
+          : 'M144,34 Q148,28 147,22'
+        }
+        stroke={bodyColor}
+        strokeWidth={4.5}
+        strokeLinecap="round"
+        fill="none"
+        animate={isWagging
+          ? { rotate: [0, 25, -25, 25, -15, 0] }
+          : isJumping
+          ? { rotate: [0, 12, -8, 12, 0] }
           : {}
         }
         transition={isWagging
-          ? { duration: 0.45, repeat: Infinity, ease: 'easeInOut' }
+          ? { duration: 0.4, repeat: Infinity, ease: 'easeInOut' }
           : isJumping
-          ? { duration: 0.6, repeat: Infinity, ease: 'easeInOut' }
+          ? { duration: 0.5, repeat: Infinity, ease: 'easeInOut' }
           : {}
         }
-        style={{ transformOrigin: isSitting ? '128px 66px' : '128px 52px' }}
+        style={{ transformOrigin: isSitting ? '142px 48px' : isJumping ? '146px 28px' : '144px 34px' }}
       />
-      {/* Rust underside of tail */}
-      <motion.path
+      {/* Rust underside of tail base */}
+      <path
         d={isSitting
-          ? 'M129,68 Q139,57 143,50'
-          : 'M129,54 Q140,42 145,34'
+          ? 'M129,68 Q136,60 140,52'
+          : 'M129,54 Q136,46 141,38'
         }
         stroke={tanFur}
         strokeWidth={2}
         strokeLinecap="round"
         fill="none"
         opacity={0.6}
-        animate={isWagging ? { rotate: [0, 20, -20, 20, -10, 0] } : {}}
-        transition={isWagging ? { duration: 0.45, repeat: Infinity, ease: 'easeInOut' } : {}}
-        style={{ transformOrigin: isSitting ? '128px 66px' : '128px 52px' }}
       />
 
       {/* Back legs */}
