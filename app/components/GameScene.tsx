@@ -659,7 +659,7 @@ export default function GameScene({ location, onSceneEnd, onQuit }: Props) {
               animate={{ scale: 1.8, opacity: 0, y: -30 }}
               transition={{ duration: 0.5 }}
             >
-              <span className="text-4xl">{item.emoji}</span>
+              <span className="text-8xl">{item.emoji}</span>
             </motion.div>
           );
         }
@@ -681,7 +681,7 @@ export default function GameScene({ location, onSceneEnd, onQuit }: Props) {
             }}
             onPointerDown={e => { e.stopPropagation(); handleItemTap(item, e); }}
           >
-            <span className={`text-4xl drop-shadow-lg ${isNear ? 'drop-shadow-[0_0_12px_rgba(255,255,100,0.8)]' : ''}`}>
+            <span className={`text-8xl drop-shadow-lg ${isNear ? 'drop-shadow-[0_0_16px_rgba(255,255,100,0.8)]' : ''}`}>
               {item.emoji}
             </span>
             {isNear && (
