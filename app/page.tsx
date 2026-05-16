@@ -3,33 +3,33 @@
 import { useState } from 'react';
 import StartScreen from './components/StartScreen';
 import GameScene from './components/GameScene';
-import { ROOMS } from './types';
-import type { Screen } from './types';
+import LocationPicker from './components/LocationPicker';
+import { LOCATIONS } from './types';
+import type { Screen, Location } from './types';
 
 export default function Home() {
   const [screen, setScreen] = useState<Screen>('start');
-  const [currentRoom, setCurrentRoom] = useState(0);
+  const [currentLocation, setCurrentLocation] = useState<Location>('house');
+  const [visitedLocations, setVisitedLocations] = useState<Location[]>([]);
 
   const handlePlay = () => {
-    setCurrentRoom(0);
+    setCurrentLocation('house');
+    setVisitedLocations([]);
     setScreen('playing');
   };
 
-  const handleNextRoom = () => {
-    if (currentRoom < ROOMS.length - 1) {
-      setCurrentRoom(prev => prev + 1);
-    }
+  const handleSceneEnd = () => {
+    setVisitedLocations(prev => [...prev, currentLocation]);
+    setScreen('choosing');
   };
 
-  const handlePrevRoom = () => {
-    if (currentRoom > 0) {
-      setCurrentRoom(prev => prev - 1);
-    }
+  const handlePickLocation = (loc: Location) => {
+    setCurrentLocation(loc);
+    setScreen('playing');
   };
 
   const handleQuit = () => {
     setScreen('start');
-    setCurrentRoom(0);
   };
 
   return (
@@ -37,11 +37,15 @@ export default function Home() {
       {screen === 'start' && <StartScreen onPlay={handlePlay} />}
       {screen === 'playing' && (
         <GameScene
-          room={ROOMS[currentRoom]}
-          roomIndex={currentRoom}
-          totalRooms={ROOMS.length}
-          onNextRoom={handleNextRoom}
-          onPrevRoom={handlePrevRoom}
+          location={LOCATIONS.find(l => l.id === currentLocation)!}
+          onSceneEnd={handleSceneEnd}
+          onQuit={handleQuit}
+        />
+      )}
+      {screen === 'choosing' && (
+        <LocationPicker
+          visited={visitedLocations}
+          onPick={handlePickLocation}
           onQuit={handleQuit}
         />
       )}
