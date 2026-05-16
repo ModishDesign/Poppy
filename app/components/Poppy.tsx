@@ -27,7 +27,7 @@ export default function Poppy({ pose = 'stand', size = 120, className, flipX = f
   const tanDark = '#8B4513';
   const noseColor = '#1a1a1a';
   const eyeColor = '#3D2200';
-  const tongueColor = '#E8556D';
+  // tongueColor removed — Poppy doesn't have tongue out
   const collarColor = '#D4A0B9';
   const collarBuckle = '#D4956B';
 
@@ -368,14 +368,27 @@ export default function Poppy({ pose = 'stand', size = 120, className, flipX = f
           transform={`rotate(15, 36, ${isSitting ? 40 : 36})`}
         />
 
-        {/* Snout */}
-        <ellipse cx={8} cy={isSitting ? 44 : 40} rx={14} ry={10} fill={tanFur} />
-        <ellipse cx={10} cy={isSitting ? 40 : 36} rx={10} ry={5} fill={tanDark} opacity={0.4} />
-        <ellipse cx={16} cy={isSitting ? 37 : 33} rx={7} ry={4} fill={bodyColor} opacity={0.45} />
+        {/* Snout — pointy dachshund snout */}
+        <path
+          d={isSitting
+            ? 'M22,44 Q10,38 -4,40 Q-8,40 -8,43 Q-8,46 -4,46 Q10,48 22,46 Z'
+            : 'M22,40 Q10,34 -4,36 Q-8,36 -8,39 Q-8,42 -4,42 Q10,44 22,42 Z'
+          }
+          fill={tanFur}
+        />
+        <path
+          d={isSitting
+            ? 'M22,42 Q12,37 2,38 Q-2,38 -2,40 Q-2,42 2,42 Q12,43 22,42 Z'
+            : 'M22,38 Q12,33 2,34 Q-2,34 -2,36 Q-2,38 2,38 Q12,39 22,38 Z'
+          }
+          fill={tanDark}
+          opacity={0.4}
+        />
+        <ellipse cx={16} cy={isSitting ? 37 : 33} rx={7} ry={3.5} fill={bodyColor} opacity={0.45} />
 
-        {/* Nose */}
-        <ellipse cx={-3} cy={isSitting ? 40 : 36} rx={5.5} ry={4.5} fill={noseColor} />
-        <ellipse cx={-3} cy={isSitting ? 38.5 : 34.5} rx={2.5} ry={1.5} fill="#333" opacity={0.5} />
+        {/* Nose — at the tip of the pointy snout */}
+        <ellipse cx={-6} cy={isSitting ? 42 : 38} rx={4.5} ry={3.5} fill={noseColor} />
+        <ellipse cx={-6} cy={isSitting ? 40.5 : 36.5} rx={2} ry={1.2} fill="#333" opacity={0.5} />
 
         {/* Eye */}
         {isSleeping ? (
@@ -419,40 +432,15 @@ export default function Poppy({ pose = 'stand', size = 120, className, flipX = f
           </>
         )}
 
-        {/* Mouth */}
+        {/* Mouth — closed, along the snout */}
         <path
-          d={`M2,${isSitting ? 46 : 42} Q8,${isSitting ? 49 : 45} 14,${isSitting ? 46 : 42}`}
+          d={`M-2,${isSitting ? 44 : 40} Q4,${isSitting ? 46 : 42} 12,${isSitting ? 44 : 40}`}
           fill="none"
           stroke={tanDark}
-          strokeWidth={1.2}
+          strokeWidth={1}
           strokeLinecap="round"
         />
 
-        {/* Tongue — bounces when happy */}
-        {isWagging && !isSleeping && (
-          <motion.g
-            animate={{ y: [0, 1.5, 0], rotate: [0, 3, -3, 0] }}
-            transition={{ duration: 0.6, repeat: Infinity, ease: 'easeInOut' }}
-            style={{ transformOrigin: `8px ${isSitting ? 48 : 44}px` }}
-          >
-            <ellipse
-              cx={8}
-              cy={isSitting ? 50 : 46}
-              rx={3.5}
-              ry={5.5}
-              fill={tongueColor}
-            />
-            {/* Tongue highlight */}
-            <ellipse
-              cx={7}
-              cy={isSitting ? 49 : 45}
-              rx={1.5}
-              ry={3}
-              fill="#F4889A"
-              opacity={0.5}
-            />
-          </motion.g>
-        )}
 
         {/* Cheek warmth */}
         {!isSleeping && (
