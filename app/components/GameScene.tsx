@@ -73,161 +73,349 @@ const LOCATION_ITEMS: Record<Location, ItemDef[]> = {
 
 const HEIGHT_OFFSETS = { ground: 0, low: 50, high: 100 };
 
-/* ─── bright background layers per location ─── */
+/* ─── pixel art background helpers ─── */
+function px(x: number, y: number, w: number, h: number, fill: string) {
+  return <rect x={x} y={y} width={w} height={h} fill={fill} />;
+}
 
-function SceneBG({ location, scrollX, viewW }: { location: Location; scrollX: number; viewW: number }) {
+function PixelScene({ location, scrollX, viewW }: { location: Location; scrollX: number; viewW: number }) {
   const farX = -scrollX * 0.15;
   const midX = -scrollX * 0.4;
+  const nearX = -scrollX * 0.7;
+  const P = 8; // pixel size
 
   switch (location) {
     case 'house':
       return (
         <>
-          <div className="absolute inset-0 bg-gradient-to-b from-[#FFF7ED] to-[#FEF3C7]" />
-          {/* Pictures on wall */}
-          <svg className="absolute inset-0 w-full h-full" style={{ transform: `translateX(${farX}px)` }} viewBox="0 0 2400 400" preserveAspectRatio="none">
-            {[200, 500, 850, 1150, 1500, 1850, 2150].map((x, i) => (
-              <rect key={i} x={x} y={60 + (i % 3) * 15} width={60 + (i % 2) * 20} height={45 + (i % 2) * 10} rx={3} fill={['#FCA5A5', '#93C5FD', '#86EFAC', '#C4B5FD', '#FDE047', '#F9A8D4', '#A5B4FC'][i]} opacity={0.5} stroke="#E5A87C" strokeWidth={2} />
-            ))}
+          {/* Bright yellow wall */}
+          <div className="absolute inset-0 bg-[#FFE566]" />
+          {/* Wall pattern - pixel stripes */}
+          <svg className="absolute inset-0 w-full h-full pixel-art" viewBox="0 0 400 300" preserveAspectRatio="none">
+            {Array.from({ length: 50 }, (_, i) => px(0, i * 6, 400, 1, i % 2 === 0 ? '#FFD700' : '#FFE566'))}
           </svg>
-          {/* Furniture */}
-          <svg className="absolute bottom-0 left-0 h-[55%]" style={{ width: SCENE_WIDTH * 1.2, transform: `translateX(${midX}px)` }} viewBox="0 0 2880 220" preserveAspectRatio="none">
-            <rect x={80} y={80} width={180} height={100} rx={10} fill="#F59E0B" opacity={0.15} />
-            <rect x={310} y={100} width={60} height={80} rx={4} fill="#D97706" opacity={0.12} />
-            <rect x={600} y={50} width={200} height={130} rx={4} fill="#10B981" opacity={0.1} />
-            <rect x={850} y={70} width={100} height={110} rx={4} fill="#6366F1" opacity={0.08} />
-            <rect x={1200} y={60} width={250} height={120} rx={8} fill="#8B5CF6" opacity={0.1} />
-            <rect x={1800} y={40} width={120} height={160} rx={6} fill="#F59E0B" opacity={0.08} />
-            <rect x={1820} y={50} width={80} height={100} rx={4} fill="#38BDF8" opacity={0.12} />
+
+          {/* Far layer furniture - big colourful pieces */}
+          <svg className="absolute bottom-[22%] left-0 h-[60%] pixel-art" style={{ width: SCENE_WIDTH * 1.3, transform: `translateX(${farX}px)` }} viewBox="0 0 3120 180" preserveAspectRatio="none">
+            {/* Giant pink couch */}
+            {px(60, 60, 160, 80, '#FF6B9D')}
+            {px(60, 50, 20, 90, '#E91E8C')}
+            {px(200, 50, 20, 90, '#E91E8C')}
+            {px(70, 65, 140, 10, '#FF8AB5')}
+            {px(70, 130, 15, 20, '#E91E8C')}
+            {px(185, 130, 15, 20, '#E91E8C')}
+            {/* Cushions */}
+            {px(80, 70, 50, 40, '#FF3D7F')}
+            {px(140, 70, 50, 40, '#FF85A2')}
+
+            {/* Tall blue bookshelf */}
+            {px(300, 10, 80, 150, '#4F46E5')}
+            {px(305, 15, 70, 3, '#6366F1')}
+            {px(305, 50, 70, 3, '#6366F1')}
+            {px(305, 85, 70, 3, '#6366F1')}
+            {px(305, 120, 70, 3, '#6366F1')}
+            {/* Colourful books */}
+            {px(310, 20, 12, 28, '#EF4444')}
+            {px(324, 22, 10, 26, '#10B981')}
+            {px(336, 18, 14, 30, '#F59E0B')}
+            {px(352, 24, 10, 24, '#8B5CF6')}
+            {px(310, 55, 14, 28, '#EC4899')}
+            {px(326, 57, 12, 26, '#06B6D4')}
+            {px(340, 53, 10, 30, '#F97316')}
+            {px(310, 90, 10, 28, '#22C55E')}
+            {px(322, 92, 14, 26, '#3B82F6')}
+            {px(338, 88, 12, 30, '#EF4444')}
+
+            {/* Big green TV on stand */}
+            {px(520, 40, 120, 80, '#1F2937')}
+            {px(525, 45, 110, 70, '#10B981')}
+            {px(530, 50, 100, 60, '#34D399')}
+            {px(520, 120, 120, 10, '#374151')}
+            {px(560, 130, 10, 30, '#4B5563')}
+            {px(590, 130, 10, 30, '#4B5563')}
+
+            {/* Orange lamp */}
+            {px(700, 20, 8, 130, '#D97706')}
+            {px(680, 10, 48, 15, '#F59E0B')}
+            {px(685, 5, 38, 10, '#FBBF24')}
+
+            {/* Kitchen: cyan fridge */}
+            {px(900, 10, 70, 150, '#06B6D4')}
+            {px(905, 15, 60, 60, '#22D3EE')}
+            {px(905, 80, 60, 75, '#0891B2')}
+            {px(950, 45, 10, 8, '#A5F3FC')}
+            {px(950, 110, 10, 8, '#A5F3FC')}
+
+            {/* Purple counter */}
+            {px(1030, 80, 180, 15, '#7C3AED')}
+            {px(1030, 95, 180, 65, '#6D28D9')}
+            {px(1040, 100, 40, 55, '#5B21B6')}
+            {px(1090, 100, 40, 55, '#5B21B6')}
+            {px(1140, 100, 60, 55, '#5B21B6')}
+
+            {/* Red stove */}
+            {px(1280, 60, 100, 100, '#EF4444')}
+            {px(1290, 65, 80, 10, '#F87171')}
+            {px(1295, 80, 25, 25, '#1F2937')}
+            {px(1340, 80, 25, 25, '#1F2937')}
+
+            {/* Bedroom: big purple bed */}
+            {px(1550, 50, 220, 80, '#A855F7')}
+            {px(1550, 40, 30, 90, '#7C3AED')}
+            {px(1740, 40, 30, 90, '#7C3AED')}
+            {px(1560, 55, 80, 35, '#C084FC')}
+            {px(1560, 55, 80, 15, '#E9D5FF')}
+            {/* Pillow */}
+            {px(1570, 58, 30, 20, '#FECDD3')}
+            {/* Blanket pattern */}
+            {px(1650, 55, 110, 35, '#D946EF')}
+            {px(1660, 60, 30, 10, '#F0ABFC')}
+            {px(1700, 65, 30, 10, '#F0ABFC')}
+
+            {/* Yellow nightstand */}
+            {px(1800, 80, 50, 70, '#FBBF24')}
+            {px(1805, 85, 40, 15, '#F59E0B')}
+            {px(1805, 110, 40, 15, '#F59E0B')}
+            {/* Lamp on nightstand */}
+            {px(1818, 40, 8, 40, '#D97706')}
+            {px(1808, 30, 28, 12, '#FDE047')}
+
+            {/* Door to garden */}
+            {px(2000, 10, 80, 150, '#D97706')}
+            {px(2010, 15, 60, 135, '#FBBF24')}
+            {px(2060, 80, 8, 12, '#92400E')}
+            {/* Window in door */}
+            {px(2020, 25, 40, 40, '#38BDF8')}
+            {px(2038, 25, 4, 40, '#D97706')}
+            {px(2020, 43, 40, 4, '#D97706')}
           </svg>
-          <div className="absolute bottom-0 left-0 right-0 h-[28%] bg-gradient-to-b from-[#D2A679] to-[#C49B6F]" />
-          <div className="absolute bottom-[28%] left-0 right-0 h-[3%] bg-[#FBBF24] opacity-40" />
+
+          {/* Bright floor */}
+          <div className="absolute bottom-0 left-0 right-0 h-[22%] bg-[#F59E0B]" />
+          {/* Floor pixel pattern */}
+          <svg className="absolute bottom-0 left-0 right-0 h-[22%] pixel-art" viewBox="0 0 400 80" preserveAspectRatio="none">
+            {Array.from({ length: 25 }, (_, i) =>
+              Array.from({ length: 5 }, (_, j) => (
+                <rect key={`${i}-${j}`} x={i * 16 + (j % 2) * 8} y={j * 16} width={16} height={16}
+                  fill={(i + j) % 2 === 0 ? '#FBBF24' : '#F59E0B'} />
+              ))
+            )}
+          </svg>
+          {/* Baseboard */}
+          <div className="absolute bottom-[22%] left-0 right-0 h-[2%] bg-[#E879F9]" />
         </>
       );
 
     case 'garden':
       return (
         <>
-          <div className="absolute inset-0 bg-gradient-to-b from-[#38BDF8] via-[#7DD3FC] to-[#BAE6FD]" />
-          <svg className="absolute top-0 left-0 w-full h-[40%]" style={{ transform: `translateX(${farX * 0.5}px)` }}>
-            {[80, 300, 550, 800, 1100].map((x, i) => (
+          {/* Bright blue sky */}
+          <div className="absolute inset-0 bg-[#38BDF8]" />
+          {/* Pixel clouds */}
+          <svg className="absolute top-0 left-0 w-full h-[45%] pixel-art" style={{ transform: `translateX(${farX * 0.5}px)` }} viewBox="0 0 500 150" preserveAspectRatio="none">
+            {/* Cloud 1 */}
+            {px(40, 20, 40, P, 'white')}{px(32, 28, 56, P, 'white')}{px(24, 36, 72, P, 'white')}{px(32, 44, 56, P, 'white')}
+            {/* Cloud 2 */}
+            {px(200, 40, 48, P, 'white')}{px(192, 48, 64, P, 'white')}{px(200, 56, 48, P, 'white')}
+            {/* Cloud 3 */}
+            {px(380, 25, 32, P, 'white')}{px(372, 33, 48, P, 'white')}{px(380, 41, 32, P, 'white')}
+            {/* Big pixel sun */}
+            {px(420, 15, 40, 40, '#FBBF24')}{px(416, 19, 48, 32, '#FDE047')}{px(424, 23, 32, 24, '#FEF3C7')}
+          </svg>
+          {/* Big pixel trees */}
+          <svg className="absolute bottom-[22%] left-0 h-[55%] pixel-art" style={{ width: SCENE_WIDTH * 1.3, transform: `translateX(${farX}px)` }} viewBox="0 0 3120 170" preserveAspectRatio="none">
+            {[80, 400, 750, 1100, 1500, 1900, 2300, 2700].map((x, i) => (
               <g key={i}>
-                <ellipse cx={x} cy={40 + i * 12} rx={50 + i * 10} ry={18} fill="white" opacity={0.7} />
+                {/* Trunk */}
+                {px(x + 16, 100, 16, 70, '#92400E')}
+                {/* Canopy - big colourful */}
+                {px(x, 40, 48, 16, i % 2 === 0 ? '#22C55E' : '#4ADE80')}
+                {px(x - 8, 56, 64, 16, i % 2 === 0 ? '#16A34A' : '#22C55E')}
+                {px(x - 16, 72, 80, 16, i % 2 === 0 ? '#15803D' : '#16A34A')}
+                {px(x - 8, 88, 64, 16, i % 2 === 0 ? '#22C55E' : '#4ADE80')}
               </g>
             ))}
-            <circle cx={viewW - 60} cy={50} r={30} fill="#FBBF24" opacity={0.9} />
-            <circle cx={viewW - 60} cy={50} r={24} fill="#FDE047" />
-          </svg>
-          <svg className="absolute bottom-[25%] left-0 h-[35%]" style={{ width: SCENE_WIDTH * 1.5, transform: `translateX(${farX}px)` }} viewBox="0 0 3600 140" preserveAspectRatio="none">
-            {[100, 350, 600, 900, 1200, 1500, 1800, 2100, 2500, 2900, 3200].map((x, i) => (
-              <g key={i}>
-                <rect x={x} y={60} width={8} height={60} rx={3} fill="#92400E" opacity={0.4} />
-                <circle cx={x + 4} cy={50} r={22 + (i % 3) * 5} fill={i % 2 === 0 ? '#22C55E' : '#4ADE80'} opacity={0.5} />
+            {/* Pixel flowers */}
+            {[150, 320, 550, 850, 1050, 1350, 1650, 1950, 2200, 2550].map((x, i) => (
+              <g key={`f${i}`}>
+                {px(x, 150, 4, 16, '#16A34A')}
+                {px(x - 4, 142, 12, 12, ['#FF6B9D', '#FBBF24', '#A855F7', '#06B6D4', '#F97316', '#EC4899', '#22C55E', '#EF4444', '#8B5CF6', '#FDE047'][i])}
+                {px(x, 146, 4, 4, '#FDE047')}
               </g>
             ))}
           </svg>
-          <svg className="absolute bottom-[22%] left-0 h-[15%]" style={{ width: SCENE_WIDTH * 1.2, transform: `translateX(${midX}px)` }} viewBox="0 0 2880 60" preserveAspectRatio="none">
-            {Array.from({ length: 80 }, (_, i) => (
+          {/* Pixel fence */}
+          <svg className="absolute bottom-[22%] left-0 h-[12%] pixel-art" style={{ width: SCENE_WIDTH * 1.2, transform: `translateX(${midX}px)` }} viewBox="0 0 2880 40" preserveAspectRatio="none">
+            {Array.from({ length: 90 }, (_, i) => (
               <g key={i}>
-                <rect x={i * 36 + 5} y={5} width={5} height={45} rx={2} fill="#D2A679" opacity={0.6} />
-                {i < 79 && <rect x={i * 36} y={15} width={36} height={4} rx={1} fill="#E5A87C" opacity={0.5} />}
-                {i < 79 && <rect x={i * 36} y={32} width={36} height={4} rx={1} fill="#E5A87C" opacity={0.5} />}
+                {px(i * 32 + 4, 0, 6, 40, '#FBBF24')}
+                {px(i * 32 + 4, 0, 6, 6, '#FDE047')}
+                {i < 89 && px(i * 32, 10, 32, 4, '#F59E0B')}
+                {i < 89 && px(i * 32, 26, 32, 4, '#F59E0B')}
               </g>
             ))}
           </svg>
-          {/* Flowers in grass */}
-          <svg className="absolute bottom-[28%] left-0 h-[6%]" style={{ width: SCENE_WIDTH, transform: `translateX(${midX}px)` }} viewBox="0 0 2400 24" preserveAspectRatio="none">
-            {Array.from({ length: 30 }, (_, i) => (
-              <circle key={i} cx={i * 82 + 20} cy={12} r={3} fill={['#F472B6', '#A78BFA', '#FB923C', '#34D399', '#FBBF24'][i % 5]} opacity={0.7} />
-            ))}
+          {/* Bright green grass */}
+          <div className="absolute bottom-0 left-0 right-0 h-[22%] bg-[#4ADE80]" />
+          {/* Grass pixel top */}
+          <svg className="absolute bottom-[22%] left-0 right-0 h-[3%] pixel-art" viewBox="0 0 400 10" preserveAspectRatio="none">
+            {Array.from({ length: 50 }, (_, i) => px(i * 8, i % 3 === 0 ? 0 : 4, 8, i % 3 === 0 ? 10 : 6, i % 2 === 0 ? '#22C55E' : '#16A34A'))}
           </svg>
-          <div className="absolute bottom-0 left-0 right-0 h-[28%] bg-gradient-to-b from-[#4ADE80] to-[#22C55E]" />
-          <div className="absolute bottom-[28%] left-0 right-0 h-[3%]">
-            <svg width="100%" height="100%" viewBox="0 0 400 12" preserveAspectRatio="none">
-              <path d="M0,12 Q10,0 20,12 Q30,0 40,12 Q50,0 60,12 Q70,0 80,12 Q90,0 100,12 Q110,0 120,12 Q130,0 140,12 Q150,0 160,12 Q170,0 180,12 Q190,0 200,12 Q210,0 220,12 Q230,0 240,12 Q250,0 260,12 Q270,0 280,12 Q290,0 300,12 Q310,0 320,12 Q330,0 340,12 Q350,0 360,12 Q370,0 380,12 Q390,0 400,12 V12 H0 Z" fill="#16A34A" />
-            </svg>
-          </div>
         </>
       );
 
     case 'beach':
       return (
         <>
-          <div className="absolute inset-0 bg-gradient-to-b from-[#0EA5E9] via-[#38BDF8] to-[#7DD3FC]" />
-          <svg className="absolute top-0 left-0 w-full h-[35%]" style={{ transform: `translateX(${farX * 0.3}px)` }}>
-            <circle cx={viewW - 80} cy={45} r={32} fill="#FBBF24" />
-            <circle cx={viewW - 80} cy={45} r={26} fill="#FDE047" />
-            {[120, 400, 700].map((x, i) => (
-              <ellipse key={i} cx={x} cy={35 + i * 8} rx={45} ry={15} fill="white" opacity={0.6} />
+          <div className="absolute inset-0 bg-[#0EA5E9]" />
+          <svg className="absolute top-0 left-0 w-full h-[40%] pixel-art" style={{ transform: `translateX(${farX * 0.3}px)` }} viewBox="0 0 500 130" preserveAspectRatio="none">
+            {px(400, 10, 48, 48, '#FBBF24')}{px(404, 14, 40, 40, '#FDE047')}{px(408, 18, 32, 32, '#FEF3C7')}
+            {px(60, 20, 48, P, 'white')}{px(52, 28, 64, P, 'white')}{px(60, 36, 48, P, 'white')}
+            {px(260, 35, 40, P, 'white')}{px(252, 43, 56, P, 'white')}{px(260, 51, 40, P, 'white')}
+          </svg>
+          {/* Pixel waves */}
+          <svg className="absolute bottom-[28%] left-0 h-[15%] pixel-art" style={{ width: SCENE_WIDTH * 1.5, transform: `translateX(${farX}px)` }} viewBox="0 0 3600 50" preserveAspectRatio="none">
+            {Array.from({ length: 60 }, (_, i) => (
+              <g key={i}>
+                {px(i * 60, i % 2 === 0 ? 10 : 20, 30, 8, '#0284C7')}
+                {px(i * 60 + 30, i % 2 === 0 ? 20 : 10, 30, 8, '#0EA5E9')}
+              </g>
             ))}
           </svg>
-          <svg className="absolute bottom-[30%] left-0 h-[18%]" style={{ width: SCENE_WIDTH * 1.5, transform: `translateX(${farX}px)` }} viewBox="0 0 3600 70" preserveAspectRatio="none">
-            <path d={`M0,35 ${Array.from({ length: 60 }, (_, i) => `Q${i * 60 + 30},${20 + Math.sin(i) * 12} ${(i + 1) * 60},35`).join(' ')} V70 H0 Z`} fill="#0EA5E9" opacity={0.4} />
+          {/* Big beach items */}
+          <svg className="absolute bottom-[22%] left-0 h-[30%] pixel-art" style={{ width: SCENE_WIDTH * 1.2, transform: `translateX(${midX}px)` }} viewBox="0 0 2880 90" preserveAspectRatio="none">
+            {/* Beach umbrella */}
+            {px(200, 10, 80, 8, '#EF4444')}{px(208, 2, 64, 8, '#F97316')}{px(216, 0, 48, 4, '#FBBF24')}
+            {px(237, 18, 6, 70, '#92400E')}
+            {/* Sandcastle */}
+            {px(800, 40, 60, 48, '#FBBF24')}{px(810, 30, 16, 10, '#FDE047')}{px(834, 30, 16, 10, '#FDE047')}
+            {px(820, 20, 20, 14, '#F59E0B')}{px(825, 16, 10, 6, '#EF4444')}
+            {/* Surfboard */}
+            {px(1400, 20, 12, 60, '#EC4899')}{px(1402, 15, 8, 5, '#F472B6')}{px(1402, 78, 8, 5, '#F472B6')}
+            {/* Bucket and spade */}
+            {px(2000, 50, 30, 30, '#3B82F6')}{px(2005, 45, 20, 8, '#60A5FA')}{px(2035, 55, 20, 6, '#F59E0B')}
           </svg>
-          <div className="absolute bottom-[26%] left-0 right-0 h-[6%] bg-gradient-to-b from-[#38BDF8]/60 to-[#FDE68A]" />
-          <div className="absolute bottom-0 left-0 right-0 h-[28%] bg-gradient-to-b from-[#FDE68A] to-[#FBBF24]" />
+          {/* Wet sand */}
+          <div className="absolute bottom-[18%] left-0 right-0 h-[8%] bg-[#D4A96A]" />
+          {/* Dry sand */}
+          <div className="absolute bottom-0 left-0 right-0 h-[22%] bg-[#FDE68A]" />
+          <svg className="absolute bottom-0 left-0 right-0 h-[22%] pixel-art" viewBox="0 0 400 80" preserveAspectRatio="none">
+            {Array.from({ length: 20 }, (_, i) => px(i * 24 + Math.random() * 10, 20 + (i % 3) * 20, 4, 4, '#FBBF24'))}
+          </svg>
         </>
       );
 
     case 'park':
       return (
         <>
-          <div className="absolute inset-0 bg-gradient-to-b from-[#3B82F6] via-[#60A5FA] to-[#93C5FD]" />
-          <svg className="absolute top-0 left-0 w-full h-[30%]" style={{ transform: `translateX(${farX * 0.3}px)` }}>
-            {[100, 350, 600, 850].map((x, i) => (
-              <ellipse key={i} cx={x} cy={30 + i * 10} rx={40 + i * 8} ry={14} fill="white" opacity={0.6} />
-            ))}
+          <div className="absolute inset-0 bg-[#38BDF8]" />
+          <svg className="absolute top-0 left-0 w-full h-[35%] pixel-art" style={{ transform: `translateX(${farX * 0.3}px)` }} viewBox="0 0 500 120" preserveAspectRatio="none">
+            {px(80, 15, 40, P, 'white')}{px(72, 23, 56, P, 'white')}{px(80, 31, 40, P, 'white')}
+            {px(300, 30, 48, P, 'white')}{px(292, 38, 64, P, 'white')}{px(300, 46, 48, P, 'white')}
           </svg>
-          <svg className="absolute bottom-[28%] left-0 h-[35%]" style={{ width: SCENE_WIDTH * 1.5, transform: `translateX(${farX}px)` }} viewBox="0 0 3600 140" preserveAspectRatio="none">
-            {[80, 250, 450, 700, 950, 1200, 1450, 1700, 2000, 2300, 2600, 2900, 3200].map((x, i) => (
+          {/* Big park trees */}
+          <svg className="absolute bottom-[22%] left-0 h-[60%] pixel-art" style={{ width: SCENE_WIDTH * 1.3, transform: `translateX(${farX}px)` }} viewBox="0 0 3120 180" preserveAspectRatio="none">
+            {[100, 500, 850, 1250, 1600, 2000, 2400, 2800].map((x, i) => (
               <g key={i}>
-                <rect x={x} y={70} width={10} height={55} rx={4} fill="#92400E" opacity={0.35} />
-                <circle cx={x + 5} cy={55} r={25 + (i % 3) * 8} fill={i % 2 === 0 ? '#22C55E' : '#4ADE80'} opacity={0.45} />
+                {px(x + 20, 110, 20, 70, '#92400E')}
+                {px(x - 8, 30, 76, 20, i % 3 === 0 ? '#22C55E' : i % 3 === 1 ? '#4ADE80' : '#10B981')}
+                {px(x - 16, 50, 92, 20, i % 3 === 0 ? '#16A34A' : i % 3 === 1 ? '#22C55E' : '#059669')}
+                {px(x - 8, 70, 76, 20, i % 3 === 0 ? '#15803D' : i % 3 === 1 ? '#16A34A' : '#047857')}
+                {px(x, 90, 60, 20, i % 3 === 0 ? '#22C55E' : i % 3 === 1 ? '#4ADE80' : '#10B981')}
               </g>
             ))}
+            {/* Pixel pond */}
+            {px(400, 140, 80, 30, '#0EA5E9')}{px(408, 136, 64, 8, '#38BDF8')}{px(416, 148, 16, 4, '#7DD3FC')}
+            {/* Park bench */}
+            {px(1100, 120, 70, 8, '#F59E0B')}{px(1100, 128, 8, 24, '#D97706')}{px(1162, 128, 8, 24, '#D97706')}
+            {px(1104, 112, 62, 8, '#FBBF24')}
+            {/* Fountain */}
+            {px(1800, 100, 60, 50, '#9CA3AF')}{px(1810, 95, 40, 8, '#D1D5DB')}
+            {px(1826, 60, 8, 35, '#9CA3AF')}{px(1818, 56, 24, 8, '#38BDF8')}{px(1814, 50, 32, 8, '#7DD3FC')}
           </svg>
-          <svg className="absolute bottom-[25%] left-0 h-[8%]" style={{ width: SCENE_WIDTH * 1.2, transform: `translateX(${midX}px)` }} viewBox="0 0 2880 30" preserveAspectRatio="none">
-            <rect x={0} y={10} width={2880} height={15} rx={5} fill="#D2A679" opacity={0.35} />
+          {/* Path */}
+          <svg className="absolute bottom-[20%] left-0 h-[6%] pixel-art" style={{ width: SCENE_WIDTH * 1.2, transform: `translateX(${midX}px)` }} viewBox="0 0 2880 20" preserveAspectRatio="none">
+            <rect x={0} y={4} width={2880} height={14} fill="#D2A679" />
+            {Array.from({ length: 100 }, (_, i) => px(i * 30, 8, 12, 4, '#E5C9A0'))}
           </svg>
-          <div className="absolute bottom-0 left-0 right-0 h-[28%] bg-gradient-to-b from-[#4ADE80] to-[#16A34A]" />
-          <div className="absolute bottom-[28%] left-0 right-0 h-[3%]">
-            <svg width="100%" height="100%" viewBox="0 0 400 12" preserveAspectRatio="none">
-              <path d="M0,12 Q10,0 20,12 Q30,0 40,12 Q50,0 60,12 Q70,0 80,12 Q90,0 100,12 Q110,0 120,12 Q130,0 140,12 Q150,0 160,12 Q170,0 180,12 Q190,0 200,12 Q210,0 220,12 Q230,0 240,12 Q250,0 260,12 Q270,0 280,12 Q290,0 300,12 Q310,0 320,12 Q330,0 340,12 Q350,0 360,12 Q370,0 380,12 Q390,0 400,12 V12 H0 Z" fill="#16A34A" />
-            </svg>
-          </div>
+          {/* Grass */}
+          <div className="absolute bottom-0 left-0 right-0 h-[22%] bg-[#4ADE80]" />
+          <svg className="absolute bottom-[22%] left-0 right-0 h-[3%] pixel-art" viewBox="0 0 400 10" preserveAspectRatio="none">
+            {Array.from({ length: 50 }, (_, i) => px(i * 8, i % 3 === 0 ? 0 : 4, 8, i % 3 === 0 ? 10 : 6, i % 2 === 0 ? '#22C55E' : '#16A34A'))}
+          </svg>
         </>
       );
 
     case 'cafe':
       return (
         <>
-          <div className="absolute inset-0 bg-gradient-to-b from-[#FEF3C7] via-[#FFF7ED] to-[#FFEDD5]" />
-          <div className="absolute top-0 left-0 right-0 h-[40%] bg-gradient-to-b from-[#FBBF24]/15 to-transparent" />
-          {/* Wall art & pendant lights */}
-          <svg className="absolute inset-0 w-full h-full" style={{ transform: `translateX(${farX}px)` }} viewBox="0 0 2400 400" preserveAspectRatio="none">
-            {[150, 500, 900, 1300, 1700, 2100].map((x, i) => (
-              <rect key={i} x={x} y={50} width={70} height={50} rx={4} fill={['#F97316', '#8B5CF6', '#EC4899', '#10B981', '#3B82F6', '#EF4444'][i]} opacity={0.15} />
-            ))}
-            {[250, 650, 1050, 1450, 1850, 2250].map((x, i) => (
-              <g key={`l${i}`}>
-                <line x1={x} y1={0} x2={x} y2={30} stroke="#D97706" strokeWidth={1.5} opacity={0.3} />
-                <ellipse cx={x} cy={35} rx={15} ry={10} fill="#FBBF24" opacity={0.25} />
-                <ellipse cx={x} cy={40} rx={8} ry={3} fill="#FDE047" opacity={0.2} />
-              </g>
-            ))}
+          {/* Warm orange wall */}
+          <div className="absolute inset-0 bg-[#FBBF24]" />
+          <svg className="absolute inset-0 w-full h-full pixel-art" viewBox="0 0 400 300" preserveAspectRatio="none">
+            {Array.from({ length: 50 }, (_, i) => px(0, i * 6, 400, 1, i % 2 === 0 ? '#F59E0B' : '#FBBF24'))}
           </svg>
-          {/* Tables */}
-          <svg className="absolute bottom-[28%] left-0 h-[20%]" style={{ width: SCENE_WIDTH * 1.2, transform: `translateX(${midX}px)` }} viewBox="0 0 2880 80" preserveAspectRatio="none">
-            {[100, 500, 900, 1300, 1700, 2100, 2500].map((x, i) => (
+          {/* Wall art & lights */}
+          <svg className="absolute top-0 left-0 w-full h-[50%] pixel-art" style={{ transform: `translateX(${farX}px)` }} viewBox="0 0 2400 150" preserveAspectRatio="none">
+            {/* Colourful art frames */}
+            {[120, 400, 700, 1000, 1350, 1700, 2050].map((x, i) => (
               <g key={i}>
-                <rect x={x} y={20} width={4} height={50} fill="#92400E" opacity={0.2} />
-                <rect x={x + 60} y={20} width={4} height={50} fill="#92400E" opacity={0.2} />
-                <rect x={x - 5} y={15} width={74} height={6} rx={2} fill="#D97706" opacity={0.2} />
+                {px(x, 20, 50, 40, ['#EF4444', '#8B5CF6', '#EC4899', '#10B981', '#3B82F6', '#F97316', '#06B6D4'][i])}
+                {px(x + 4, 24, 42, 32, ['#FCA5A5', '#C4B5FD', '#FBCFE8', '#6EE7B7', '#93C5FD', '#FDBA74', '#67E8F9'][i])}
+              </g>
+            ))}
+            {/* Pendant lights */}
+            {[200, 550, 900, 1250, 1600, 1950].map((x, i) => (
+              <g key={`l${i}`}>
+                {px(x, 0, 4, 30, '#92400E')}
+                {px(x - 12, 30, 28, 12, '#FDE047')}
+                {px(x - 8, 34, 20, 4, '#FEF3C7')}
               </g>
             ))}
           </svg>
-          <div className="absolute bottom-0 left-0 right-0 h-[28%] bg-gradient-to-b from-[#D2A679] to-[#C49B6F]" />
-          <div className="absolute bottom-[28%] left-0 right-0 h-[3%] bg-[#FBBF24] opacity-30" />
+          {/* Big furniture */}
+          <svg className="absolute bottom-[22%] left-0 h-[50%] pixel-art" style={{ width: SCENE_WIDTH * 1.3, transform: `translateX(${midX}px)` }} viewBox="0 0 3120 150" preserveAspectRatio="none">
+            {/* Counter/bar - long and tall */}
+            {px(50, 40, 250, 80, '#D97706')}
+            {px(55, 35, 240, 8, '#F59E0B')}
+            {px(55, 45, 240, 10, '#E5A87C')}
+            {/* Coffee machine on counter */}
+            {px(80, 10, 40, 30, '#4B5563')}
+            {px(85, 5, 30, 8, '#6B7280')}
+            {px(90, 0, 8, 8, '#EF4444')}
+
+            {/* Colourful tables & chairs scattered */}
+            {[400, 800, 1200, 1600, 2000, 2400, 2800].map((x, i) => (
+              <g key={i}>
+                {/* Table */}
+                {px(x, 80, 60, 8, ['#EF4444', '#3B82F6', '#22C55E', '#A855F7', '#F97316', '#EC4899', '#06B6D4'][i])}
+                {px(x + 12, 88, 8, 40, ['#B91C1C', '#1D4ED8', '#15803D', '#7C3AED', '#C2410C', '#BE185D', '#0891B2'][i])}
+                {px(x + 40, 88, 8, 40, ['#B91C1C', '#1D4ED8', '#15803D', '#7C3AED', '#C2410C', '#BE185D', '#0891B2'][i])}
+                {/* Chair */}
+                {px(x - 20, 90, 16, 4, ['#FBBF24', '#F472B6', '#A78BFA', '#34D399', '#FB923C', '#67E8F9', '#FDE047'][i])}
+                {px(x - 16, 94, 8, 34, ['#F59E0B', '#EC4899', '#8B5CF6', '#10B981', '#F97316', '#06B6D4', '#FBBF24'][i])}
+                {px(x - 20, 82, 4, 12, ['#F59E0B', '#EC4899', '#8B5CF6', '#10B981', '#F97316', '#06B6D4', '#FBBF24'][i])}
+              </g>
+            ))}
+
+            {/* Display case with cakes */}
+            {px(2900, 50, 80, 80, '#F5F5F4')}
+            {px(2905, 55, 70, 3, '#D1D5DB')}
+            {px(2910, 62, 15, 12, '#EC4899')}
+            {px(2930, 65, 12, 9, '#FBBF24')}
+            {px(2948, 60, 18, 14, '#8B5CF6')}
+          </svg>
+
+          {/* Warm tile floor */}
+          <div className="absolute bottom-0 left-0 right-0 h-[22%] bg-[#F97316]" />
+          <svg className="absolute bottom-0 left-0 right-0 h-[22%] pixel-art" viewBox="0 0 400 80" preserveAspectRatio="none">
+            {Array.from({ length: 25 }, (_, i) =>
+              Array.from({ length: 5 }, (_, j) => (
+                <rect key={`${i}-${j}`} x={i * 16 + (j % 2) * 8} y={j * 16} width={16} height={16}
+                  fill={(i + j) % 2 === 0 ? '#FB923C' : '#F97316'} />
+              ))
+            )}
+          </svg>
+          <div className="absolute bottom-[22%] left-0 right-0 h-[2%] bg-[#D97706]" />
         </>
       );
   }
@@ -283,7 +471,6 @@ export default function GameScene({ location, onSceneEnd, onQuit }: Props) {
     requestAnimationFrame(jumpAnim);
   }, []);
 
-  // Walk loop
   useEffect(() => {
     const tick = () => {
       if (walkingRef.current && scrollRef.current < SCENE_WIDTH) {
@@ -296,19 +483,15 @@ export default function GameScene({ location, onSceneEnd, onQuit }: Props) {
     return () => cancelAnimationFrame(animRef.current);
   }, []);
 
-  // Check encounters
   useEffect(() => {
     const poppyPct = (scrollRef.current / SCENE_WIDTH) * 100;
     const currentJumpY = jumpYRef.current;
-
     items.forEach(item => {
       if (!item.found && Math.abs(item.xPos - poppyPct) < 4) {
-        // Ground items: always collect. Low items: collect if jumping a bit. High items: need a real jump.
         const canReach =
           item.height === 'ground' ||
           (item.height === 'low' && currentJumpY > 20) ||
           (item.height === 'high' && currentJumpY > 60);
-
         if (canReach) {
           setItems(prev => prev.map(i => i.id === item.id ? { ...i, found: true } : i));
           setDiscoveredCount(c => c + 1);
@@ -318,7 +501,6 @@ export default function GameScene({ location, onSceneEnd, onQuit }: Props) {
         }
       }
     });
-
     if (scrollRef.current >= SCENE_WIDTH && !sceneFinished) {
       setSceneFinished(true);
       setIsWalking(false);
@@ -349,16 +531,14 @@ export default function GameScene({ location, onSceneEnd, onQuit }: Props) {
       onPointerUp={stopWalking}
       onPointerLeave={stopWalking}
     >
-      {/* Parallax background */}
-      <SceneBG location={location.id} scrollX={scrollX} viewW={viewW} />
+      <PixelScene location={location.id} scrollX={scrollX} viewW={viewW} />
 
-      {/* Items along the scene */}
+      {/* Items */}
       {items.map(item => {
         const worldX = (item.xPos / 100) * SCENE_WIDTH;
         const screenX = worldX - scrollX + viewW * 0.35;
-        if (screenX < -60 || screenX > viewW + 60) return null;
-        if (item.found) return null;
-        const bottomOffset = 28 + HEIGHT_OFFSETS[item.height] * 0.18;
+        if (screenX < -60 || screenX > viewW + 60 || item.found) return null;
+        const bottomOffset = 22 + HEIGHT_OFFSETS[item.height] * 0.18;
         return (
           <motion.div
             key={item.id}
@@ -370,7 +550,7 @@ export default function GameScene({ location, onSceneEnd, onQuit }: Props) {
             <span className="text-3xl drop-shadow-lg">{item.emoji}</span>
             {item.height === 'high' && (
               <motion.div
-                className="absolute -bottom-3 left-1/2 -translate-x-1/2 text-[8px] font-bold text-amber-300 whitespace-nowrap"
+                className="absolute -bottom-3 left-1/2 -translate-x-1/2 text-[8px] font-bold text-yellow-300 whitespace-nowrap drop-shadow"
                 animate={{ opacity: [0.5, 1, 0.5] }}
                 transition={{ duration: 1.5, repeat: Infinity }}
               >
@@ -381,18 +561,18 @@ export default function GameScene({ location, onSceneEnd, onQuit }: Props) {
         );
       })}
 
-      {/* Poppy */}
+      {/* Poppy - small compared to furniture */}
       <div
         className="absolute z-20"
         style={{
           left: '35%',
-          bottom: `${22 + jumpY * 0.08}%`,
+          bottom: `${16 + jumpY * 0.08}%`,
           transform: 'translateX(-50%)',
         }}
       >
         <Poppy
           pose={sceneFinished ? 'wag' : isJumping ? 'jump' : isWalking ? 'walk' : 'stand'}
-          size={80}
+          size={65}
         />
       </div>
 
@@ -400,15 +580,15 @@ export default function GameScene({ location, onSceneEnd, onQuit }: Props) {
       <div className="absolute top-0 left-0 right-0 p-3 flex items-center justify-between z-30">
         <button
           onClick={(e) => { e.stopPropagation(); onQuit(); }}
-          className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold text-white/90 bg-black/25 backdrop-blur-sm active:scale-95 transition-transform"
+          className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold text-white bg-black/30 active:scale-95 transition-transform"
         >
           ✕
         </button>
         <div className="flex items-center gap-2">
-          <div className="px-3 py-1.5 rounded-xl text-xs font-bold text-white bg-black/25 backdrop-blur-sm">
+          <div className="px-3 py-1.5 rounded-xl text-xs font-bold text-white bg-black/30">
             {location.emoji} {location.label}
           </div>
-          <div className="px-3 py-1.5 rounded-xl text-xs font-bold text-amber-200 bg-black/25 backdrop-blur-sm">
+          <div className="px-3 py-1.5 rounded-xl text-xs font-bold text-yellow-300 bg-black/30">
             {discoveredCount}/{totalItems}
           </div>
         </div>
@@ -416,9 +596,9 @@ export default function GameScene({ location, onSceneEnd, onQuit }: Props) {
 
       {/* Progress bar */}
       <div className="absolute top-14 left-4 right-4 z-30">
-        <div className="h-1.5 rounded-full bg-white/20 overflow-hidden">
+        <div className="h-2 rounded-full bg-black/20 overflow-hidden">
           <motion.div
-            className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-400"
+            className="h-full rounded-full bg-gradient-to-r from-yellow-400 via-pink-400 to-purple-400"
             animate={{ width: `${progress * 100}%` }}
             transition={{ ease: 'linear' }}
           />
@@ -428,18 +608,16 @@ export default function GameScene({ location, onSceneEnd, onQuit }: Props) {
       {/* Jump button */}
       {!showIntro && !sceneFinished && (
         <motion.button
-          className="absolute bottom-6 right-5 z-30 w-14 h-14 rounded-full bg-amber-500/80 backdrop-blur-sm border-2 border-amber-300/60 flex items-center justify-center text-xl font-bold text-white shadow-lg active:scale-90 transition-transform"
-          onPointerDown={e => {
-            e.stopPropagation();
-            handleJump();
-          }}
+          className="absolute bottom-6 right-5 z-30 w-14 h-14 rounded-2xl bg-[#FF6B9D] border-4 border-[#FF3D7F] flex items-center justify-center text-xl font-black text-white shadow-lg active:scale-90 transition-transform"
+          style={{ imageRendering: 'pixelated' }}
+          onPointerDown={e => { e.stopPropagation(); handleJump(); }}
           whileTap={{ scale: 0.85 }}
         >
           ↑
         </motion.button>
       )}
 
-      {/* Caption at top — no background */}
+      {/* Caption — top, no background */}
       <AnimatePresence>
         {activeMessage && (
           <motion.p
@@ -448,7 +626,7 @@ export default function GameScene({ location, onSceneEnd, onQuit }: Props) {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: -10, opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="absolute top-20 left-4 right-4 z-30 text-center text-white font-bold text-sm drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]"
+            className="absolute top-20 left-4 right-4 z-30 text-center text-white font-black text-sm drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]"
           >
             {activeMessage}
           </motion.p>
@@ -458,31 +636,23 @@ export default function GameScene({ location, onSceneEnd, onQuit }: Props) {
       {/* Hold hint */}
       {!showIntro && !sceneFinished && !isWalking && scrollX < 30 && (
         <motion.div
-          className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 text-white/70 text-xs font-medium drop-shadow"
-          animate={{ opacity: [0.4, 0.8, 0.4] }}
-          transition={{ duration: 2.5, repeat: Infinity }}
+          className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 text-white/80 text-xs font-bold drop-shadow"
+          animate={{ opacity: [0.4, 1, 0.4] }}
+          transition={{ duration: 2, repeat: Infinity }}
         >
           Hold to walk · Tap ↑ to jump
         </motion.div>
       )}
 
-      {/* Intro overlay */}
+      {/* Intro */}
       <AnimatePresence>
         {showIntro && (
-          <motion.div
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.4 }}
-            className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm"
-          >
-            <motion.div
-              initial={{ scale: 0.5, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: 'spring', stiffness: 200 }}
-              className="text-center"
-            >
+          <motion.div initial={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }}
+            className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-black/50">
+            <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: 'spring', stiffness: 200 }} className="text-center">
               <div className="text-5xl mb-2">{location.emoji}</div>
-              <h2 className="text-2xl font-black text-white">{location.label}</h2>
+              <h2 className="text-3xl font-black text-white drop-shadow-lg">{location.label}</h2>
             </motion.div>
           </motion.div>
         )}
@@ -491,21 +661,11 @@ export default function GameScene({ location, onSceneEnd, onQuit }: Props) {
       {/* Scene end */}
       <AnimatePresence>
         {sceneFinished && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="absolute inset-0 z-40 flex items-center justify-center bg-black/30 backdrop-blur-sm"
-          >
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: 'spring' }}
-              className="text-center"
-            >
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            className="absolute inset-0 z-40 flex items-center justify-center bg-black/40">
+            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring' }} className="text-center">
               <div className="text-4xl mb-2">🎉</div>
-              <h2 className="text-xl font-black text-white">
-                Found {discoveredCount}/{totalItems}
-              </h2>
+              <h2 className="text-xl font-black text-white">Found {discoveredCount}/{totalItems}</h2>
             </motion.div>
           </motion.div>
         )}
