@@ -18,10 +18,10 @@ export default function Poppy({ pose = 'stand', size = 120, className, flipX = f
   const isSitting = pose === 'sit';
   const isSleeping = pose === 'sleep';
 
-  const bodyColor = '#B8510D';
-  const darkFur = '#8B3A06';
-  const lightFur = '#D4782F';
-  const bellyColor = '#E8A44E';
+  const bodyColor = '#1a1a1a';      // black body
+  const darkFur = '#0d0d0d';        // darker black
+  const lightFur = '#C8956C';       // tan markings
+  const bellyColor = '#D4A574';     // tan belly
   const noseColor = '#1a1a1a';
   const eyeColor = '#2D1600';
   const tongueColor = '#E8556D';
@@ -39,7 +39,7 @@ export default function Poppy({ pose = 'stand', size = 120, className, flipX = f
       {/* Shadow */}
       <ellipse cx={80} cy={108} rx={50} ry={4} fill="rgba(0,0,0,0.12)" />
 
-      {/* Tail */}
+      {/* Tail — black with tan underside */}
       <motion.path
         d={isSitting
           ? 'M128,68 Q140,55 145,48 Q148,42 144,38'
@@ -62,8 +62,8 @@ export default function Poppy({ pose = 'stand', size = 120, className, flipX = f
             transition={isWalking ? { duration: 0.35, repeat: Infinity } : {}}
             style={{ transformOrigin: '108px 68px' }}
           >
-            <rect x={104} y={isSitting ? 72 : 68} width={7} height={isSitting ? 18 : 28} rx={3.5} fill={darkFur} />
-            {!isSitting && <ellipse cx={107.5} cy={97} rx={5} ry={3.5} fill={bodyColor} />}
+            <rect x={104} y={isSitting ? 72 : 68} width={7} height={isSitting ? 18 : 28} rx={3.5} fill={bodyColor} />
+            {!isSitting && <ellipse cx={107.5} cy={97} rx={5} ry={3.5} fill={lightFur} />}
           </motion.g>
           <motion.g
             animate={isWalking ? { rotate: [0, 18, -18, 0] } : {}}
@@ -72,6 +72,9 @@ export default function Poppy({ pose = 'stand', size = 120, className, flipX = f
           >
             <rect x={112} y={isSitting ? 72 : 68} width={7} height={isSitting ? 18 : 28} rx={3.5} fill={bodyColor} />
             {!isSitting && <ellipse cx={115.5} cy={97} rx={5} ry={3.5} fill={lightFur} />}
+            {/* Tan lower legs */}
+            {!isSitting && <rect x={104} y={88} width={7} height={8} rx={3} fill={lightFur} opacity={0.7} />}
+            {!isSitting && <rect x={112} y={88} width={7} height={8} rx={3} fill={lightFur} opacity={0.7} />}
           </motion.g>
           {isSitting && (
             <ellipse cx={112} cy={88} rx={12} ry={5} fill={bodyColor} />
@@ -87,23 +90,14 @@ export default function Poppy({ pose = 'stand', size = 120, className, flipX = f
         ry={isSitting ? 16 : 14}
         fill={bodyColor}
       />
-      {/* Belly highlight */}
+      {/* Belly - tan underside */}
       <ellipse
         cx={78}
         cy={isSitting ? 66 : 60}
         rx={38}
         ry={isSitting ? 9 : 7}
         fill={bellyColor}
-        opacity={0.5}
-      />
-      {/* Back fur detail */}
-      <ellipse
-        cx={85}
-        cy={isSitting ? 52 : 46}
-        rx={35}
-        ry={6}
-        fill={darkFur}
-        opacity={0.3}
+        opacity={0.7}
       />
 
       {/* Front legs */}
@@ -114,8 +108,9 @@ export default function Poppy({ pose = 'stand', size = 120, className, flipX = f
             transition={isWalking ? { duration: 0.35, repeat: Infinity } : {}}
             style={{ transformOrigin: '44px 65px' }}
           >
-            <rect x={40} y={65} width={7} height={isSitting ? 26 : 30} rx={3.5} fill={darkFur} />
-            <ellipse cx={43.5} cy={isSitting ? 92 : 96} rx={5} ry={3.5} fill={bodyColor} />
+            <rect x={40} y={65} width={7} height={isSitting ? 26 : 30} rx={3.5} fill={bodyColor} />
+            <ellipse cx={43.5} cy={isSitting ? 92 : 96} rx={5} ry={3.5} fill={lightFur} />
+            <rect x={40} y={isSitting ? 84 : 88} width={7} height={8} rx={3} fill={lightFur} opacity={0.7} />
           </motion.g>
           <motion.g
             animate={isWalking ? { rotate: [0, -18, 18, 0] } : {}}
@@ -124,6 +119,7 @@ export default function Poppy({ pose = 'stand', size = 120, className, flipX = f
           >
             <rect x={48} y={65} width={7} height={isSitting ? 26 : 30} rx={3.5} fill={bodyColor} />
             <ellipse cx={51.5} cy={isSitting ? 92 : 96} rx={5} ry={3.5} fill={lightFur} />
+            <rect x={48} y={isSitting ? 84 : 88} width={7} height={8} rx={3} fill={lightFur} opacity={0.7} />
           </motion.g>
         </>
       )}
@@ -147,8 +143,8 @@ export default function Poppy({ pose = 'stand', size = 120, className, flipX = f
       />
       <circle cx={37} cy={isSitting ? 58 : 54} r={2.5} fill={tagColor} />
 
-      {/* Chest tuft */}
-      <ellipse cx={34} cy={isSitting ? 60 : 56} rx={6} ry={8} fill={lightFur} opacity={0.6} />
+      {/* Chest - tan */}
+      <ellipse cx={34} cy={isSitting ? 60 : 56} rx={8} ry={10} fill={lightFur} opacity={0.85} />
 
       {/* Head */}
       <motion.g
@@ -163,15 +159,9 @@ export default function Poppy({ pose = 'stand', size = 120, className, flipX = f
           ry={16}
           fill={bodyColor}
         />
-        {/* Top of head - darker */}
-        <ellipse
-          cx={26}
-          cy={isSitting ? 34 : 30}
-          rx={14}
-          ry={8}
-          fill={darkFur}
-          opacity={0.4}
-        />
+        {/* Tan eyebrow dots — classic black & tan markings */}
+        <circle cx={18} cy={isSitting ? 30 : 26} r={3} fill={lightFur} opacity={0.9} />
+        <circle cx={28} cy={isSitting ? 30 : 26} r={2.5} fill={lightFur} opacity={0.7} />
 
         {/* Floppy ear */}
         <motion.ellipse
@@ -179,14 +169,14 @@ export default function Poppy({ pose = 'stand', size = 120, className, flipX = f
           cy={isSitting ? 34 : 30}
           rx={8}
           ry={16}
-          fill={darkFur}
+          fill="#111111"
           transform={`rotate(20, 34, ${isSitting ? 30 : 26})`}
           animate={isWagging ? { rotate: [20, 25, 15, 20] } : {}}
           transition={isWagging ? { duration: 0.5, repeat: Infinity } : {}}
           style={{ transformOrigin: `34px ${isSitting ? 28 : 24}px` }}
         />
 
-        {/* Snout */}
+        {/* Snout — tan muzzle */}
         <ellipse
           cx={8}
           cy={isSitting ? 44 : 40}
@@ -194,13 +184,14 @@ export default function Poppy({ pose = 'stand', size = 120, className, flipX = f
           ry={10}
           fill={lightFur}
         />
-        {/* Snout bridge */}
+        {/* Snout bridge — black on top blending to tan */}
         <ellipse
-          cx={12}
-          cy={isSitting ? 40 : 36}
-          rx={10}
-          ry={6}
+          cx={14}
+          cy={isSitting ? 38 : 34}
+          rx={8}
+          ry={5}
           fill={bodyColor}
+          opacity={0.5}
         />
 
         {/* Nose */}
@@ -221,12 +212,12 @@ export default function Poppy({ pose = 'stand', size = 120, className, flipX = f
             <circle cx={22} cy={isSitting ? 36 : 32} r={5.5} fill="white" />
             <circle cx={20.5} cy={isSitting ? 35.5 : 31.5} r={3.5} fill={eyeColor} />
             <circle cx={19} cy={isSitting ? 34 : 30} r={1.5} fill="white" />
-            {/* Eyebrow */}
+            {/* Eyebrow — tan */}
             <path
               d={`M16,${isSitting ? 30 : 26} Q22,${isSitting ? 27 : 23} 28,${isSitting ? 29 : 25}`}
               fill="none"
-              stroke={darkFur}
-              strokeWidth={1.8}
+              stroke={lightFur}
+              strokeWidth={2}
               strokeLinecap="round"
             />
           </>
