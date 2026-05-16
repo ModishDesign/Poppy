@@ -135,20 +135,57 @@ function PixelWorld({ location, cameraX, cameraY, viewW, viewH }: {
       <svg className="absolute inset-0 w-full h-full pixel-art" viewBox={`0 0 ${viewW} ${viewH}`}>
         {location === 'house' && <>
           {/* Wall trim */}
-          <rect x={0} y={viewH * 0.33} width={viewW} height={4} fill="#E879F9" />
+          <rect x={0} y={viewH * 0.33} width={viewW} height={6} fill="#E879F9" />
           {/* Windows */}
           {[0.15, 0.45, 0.75].map((xp, i) => (
-            <g key={i} transform={`translate(${xp * viewW + parallax(0.05)}, ${viewH * 0.12})`}>
-              <rect x={0} y={0} width={60} height={50} fill="#87CEEB" rx={3} />
-              <rect x={28} y={0} width={4} height={50} fill="#D97706" />
-              <rect x={0} y={23} width={60} height={4} fill="#D97706" />
-              <rect x={-3} y={-3} width={66} height={4} fill="#D97706" />
+            <g key={i} transform={`translate(${xp * viewW + parallax(0.05)}, ${viewH * 0.08})`}>
+              <rect x={0} y={0} width={80} height={65} fill="#87CEEB" rx={4} />
+              <rect x={38} y={0} width={4} height={65} fill="#D97706" />
+              <rect x={0} y={30} width={80} height={4} fill="#D97706" />
+              <rect x={-4} y={-4} width={88} height={6} fill="#D97706" />
+              {/* Curtains */}
+              <rect x={2} y={2} width={12} height={58} fill="#EC4899" opacity={0.4} rx={2} />
+              <rect x={66} y={2} width={12} height={58} fill="#EC4899" opacity={0.4} rx={2} />
             </g>
           ))}
-          {/* Big furniture silhouettes in background */}
-          <rect x={parallax(0.08) + viewW * 0.1} y={viewH * 0.2} width={80} height={50} rx={4} fill="#FF6B9D" opacity={0.3} />
-          <rect x={parallax(0.08) + viewW * 0.5} y={viewH * 0.15} width={40} height={70} rx={3} fill="#4F46E5" opacity={0.3} />
-          <rect x={parallax(0.08) + viewW * 0.8} y={viewH * 0.18} width={70} height={45} rx={3} fill="#A855F7" opacity={0.3} />
+          {/* BIG pink couch */}
+          <g transform={`translate(${parallax(0.06) + viewW * 0.05}, ${viewH * 0.15})`}>
+            <rect x={0} y={20} width={180} height={90} rx={8} fill="#FF6B9D" />
+            <rect x={0} y={15} width={20} height={100} rx={6} fill="#E91E8C" />
+            <rect x={160} y={15} width={20} height={100} rx={6} fill="#E91E8C" />
+            <rect x={25} y={30} width={55} height={45} rx={6} fill="#FF3D7F" />
+            <rect x={95} y={30} width={55} height={45} rx={6} fill="#FF85A2" />
+            <rect x={10} y={105} width={16} height={12} rx={3} fill="#E91E8C" />
+            <rect x={154} y={105} width={16} height={12} rx={3} fill="#E91E8C" />
+          </g>
+          {/* Big blue bookshelf */}
+          <g transform={`translate(${parallax(0.06) + viewW * 0.5}, ${viewH * 0.04})`}>
+            <rect x={0} y={0} width={70} height={130} rx={4} fill="#4F46E5" />
+            <rect x={5} y={5} width={60} height={3} fill="#6366F1" />
+            <rect x={5} y={35} width={60} height={3} fill="#6366F1" />
+            <rect x={5} y={65} width={60} height={3} fill="#6366F1" />
+            <rect x={5} y={95} width={60} height={3} fill="#6366F1" />
+            {/* Books */}
+            <rect x={10} y={10} width={10} height={22} fill="#EF4444" />
+            <rect x={22} y={12} width={8} height={20} fill="#10B981" />
+            <rect x={32} y={8} width={12} height={24} fill="#F59E0B" />
+            <rect x={46} y={14} width={8} height={18} fill="#EC4899" />
+            <rect x={10} y={40} width={12} height={22} fill="#06B6D4" />
+            <rect x={24} y={42} width={10} height={20} fill="#F97316" />
+            <rect x={36} y={38} width={14} height={24} fill="#8B5CF6" />
+            <rect x={10} y={70} width={8} height={22} fill="#22C55E" />
+            <rect x={20} y={72} width={12} height={20} fill="#3B82F6" />
+            <rect x={34} y={68} width={10} height={24} fill="#EF4444" />
+          </g>
+          {/* Big purple bed */}
+          <g transform={`translate(${parallax(0.06) + viewW * 0.75}, ${viewH * 0.12})`}>
+            <rect x={0} y={20} width={160} height={70} rx={6} fill="#A855F7" />
+            <rect x={0} y={12} width={20} height={82} rx={5} fill="#7C3AED" />
+            <rect x={140} y={12} width={20} height={82} rx={5} fill="#7C3AED" />
+            <rect x={25} y={25} width={60} height={30} rx={4} fill="#C084FC" />
+            <rect x={30} y={28} width={25} height={18} rx={3} fill="#FECDD3" />
+            <rect x={90} y={25} width={45} height={30} rx={4} fill="#D946EF" />
+          </g>
         </>}
 
         {location === 'garden' && <>
@@ -315,11 +352,12 @@ export default function GameScene({ location, collectedItems, onSceneEnd, onQuit
   const [floatingTreat, setFloatingTreat] = useState<{ amount: number; x: number; y: number } | null>(null);
   const [activeMiniGame, setActiveMiniGame] = useState<{ type: 'fetch' | 'dig' | 'chase'; emoji: string; label: string; itemId: string } | null>(null);
 
-  // D-pad state
-  const dirRef = useRef({ up: false, down: false, left: false, right: false });
+  // Touch-to-move state
+  const touchTarget = useRef<{ x: number; depth: number } | null>(null);
   const poppyRef = useRef({ x: 150, depth: 55 });
   const animRef = useRef(0);
   const msgTimeout = useRef<NodeJS.Timeout | null>(null);
+  const isTouching = useRef(false);
 
   const totalItems = items.length;
   const unfoundItems = items.filter(i => !i.found);
@@ -329,50 +367,62 @@ export default function GameScene({ location, collectedItems, onSceneEnd, onQuit
     return () => clearTimeout(timer);
   }, []);
 
-  /* ─── game loop ─── */
+  /* ─── game loop: move toward touch target ─── */
   useEffect(() => {
     const tick = () => {
-      const d = dirRef.current;
-      let moved = false;
+      const target = touchTarget.current;
+      if (target && isTouching.current) {
+        const dx = target.x - poppyRef.current.x;
+        const dd = target.depth - poppyRef.current.depth;
+        const dist = Math.sqrt(dx * dx + dd * dd);
 
-      if (d.right && poppyRef.current.x < WORLD_W) {
-        poppyRef.current.x = Math.min(WORLD_W, poppyRef.current.x + MOVE_SPEED);
-        moved = true;
+        if (dist > 3) {
+          const nx = dx / dist;
+          const nd = dd / dist;
+          poppyRef.current.x = Math.max(0, Math.min(WORLD_W, poppyRef.current.x + nx * MOVE_SPEED));
+          poppyRef.current.depth = Math.max(5, Math.min(95, poppyRef.current.depth + nd * MOVE_SPEED * 0.6));
+          setPoppyX(poppyRef.current.x);
+          setPoppyDepth(poppyRef.current.depth);
+          setPoppyPose(prev => prev === 'wag' ? prev : 'walk');
+          if (dx > 1) setFlipPoppy(false);
+          else if (dx < -1) setFlipPoppy(true);
+        } else {
+          setPoppyPose(prev => prev === 'walk' ? 'stand' : prev);
+        }
       }
-      if (d.left && poppyRef.current.x > 0) {
-        poppyRef.current.x = Math.max(0, poppyRef.current.x - MOVE_SPEED);
-        moved = true;
-      }
-      if (d.up && poppyRef.current.depth > 5) {
-        poppyRef.current.depth = Math.max(5, poppyRef.current.depth - MOVE_SPEED * 0.5);
-        moved = true;
-      }
-      if (d.down && poppyRef.current.depth < 95) {
-        poppyRef.current.depth = Math.min(95, poppyRef.current.depth + MOVE_SPEED * 0.5);
-        moved = true;
-      }
-
-      if (moved) {
-        setPoppyX(poppyRef.current.x);
-        setPoppyDepth(poppyRef.current.depth);
-      }
-
       animRef.current = requestAnimationFrame(tick);
     };
     animRef.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(animRef.current);
   }, []);
 
-  /* ─── walking pose update ─── */
-  useEffect(() => {
-    const d = dirRef.current;
-    const isMoving = d.up || d.down || d.left || d.right;
-    if (isMoving && poppyPose !== 'wag') {
-      setPoppyPose('walk');
-      if (d.right) setFlipPoppy(false);
-      else if (d.left) setFlipPoppy(true);
-    }
-  });
+  /* ─── touch handlers: tap/drag anywhere to move Poppy ─── */
+  const screenToWorld = useCallback((clientX: number, clientY: number) => {
+    const cX = poppyRef.current.x - viewW * 0.4;
+    const worldX = clientX + cX;
+    // Invert depthToScreenY: depth = ((screenY - top) / (bottom - top)) * 100
+    const top = viewH * 0.35;
+    const bottom = viewH * 0.82;
+    const depth = Math.max(5, Math.min(95, ((clientY - top) / (bottom - top)) * 100));
+    return { x: Math.max(0, Math.min(WORLD_W, worldX)), depth };
+  }, [viewW, viewH]);
+
+  const handleScenePointerDown = useCallback((e: React.PointerEvent) => {
+    if (showIntro || sceneFinished || activeMiniGame) return;
+    isTouching.current = true;
+    touchTarget.current = screenToWorld(e.clientX, e.clientY);
+  }, [showIntro, sceneFinished, activeMiniGame, screenToWorld]);
+
+  const handleScenePointerMove = useCallback((e: React.PointerEvent) => {
+    if (!isTouching.current) return;
+    touchTarget.current = screenToWorld(e.clientX, e.clientY);
+  }, [screenToWorld]);
+
+  const handleScenePointerUp = useCallback(() => {
+    isTouching.current = false;
+    touchTarget.current = null;
+    setPoppyPose(prev => prev === 'walk' ? 'stand' : prev);
+  }, []);
 
   /* ─── discover item ─── */
   const discoverItem = useCallback((item: GameItem & { found: boolean }, screenX: number, screenY: number) => {
@@ -479,17 +529,6 @@ export default function GameScene({ location, collectedItems, onSceneEnd, onQuit
     }
   }, [unfoundItems.length, discoveredCount, sceneFinished, treatsEarned, newCollected, onSceneEnd]);
 
-  /* ─── D-pad handlers ─── */
-  const setDir = (dir: 'up' | 'down' | 'left' | 'right', active: boolean) => {
-    dirRef.current[dir] = active;
-    if (!active) {
-      const d = dirRef.current;
-      if (!d.up && !d.down && !d.left && !d.right) {
-        setPoppyPose(prev => prev === 'walk' ? 'stand' : prev);
-      }
-    }
-  };
-
   // Camera
   const cameraX = poppyX - viewW * 0.4;
   const poppyScreenY = depthToScreenY(poppyDepth, viewH);
@@ -499,7 +538,14 @@ export default function GameScene({ location, collectedItems, onSceneEnd, onQuit
   const sortedItems = [...items].filter(i => !i.found).sort((a, b) => a.depth - b.depth);
 
   return (
-    <div className="relative h-full w-full overflow-hidden select-none" style={{ touchAction: 'none' }}>
+    <div
+      className="relative h-full w-full overflow-hidden select-none"
+      style={{ touchAction: 'none' }}
+      onPointerDown={handleScenePointerDown}
+      onPointerMove={handleScenePointerMove}
+      onPointerUp={handleScenePointerUp}
+      onPointerLeave={handleScenePointerUp}
+    >
       <PixelWorld location={location.id} cameraX={cameraX} cameraY={0} viewW={viewW} viewH={viewH} />
 
       {/* Items - depth sorted, 3D scaled */}
@@ -601,44 +647,9 @@ export default function GameScene({ location, collectedItems, onSceneEnd, onQuit
         </div>
       </div>
 
-      {/* ─── D-PAD + DONE BUTTON ─── */}
+      {/* ─── DONE BUTTON ─── */}
       {!showIntro && !sceneFinished && !activeMiniGame && (
-        <div className="absolute bottom-4 left-0 right-0 z-30 flex items-end justify-between px-4">
-          {/* D-pad */}
-          <div className="relative w-[130px] h-[130px]">
-            {/* Up */}
-            <button
-              className="absolute top-0 left-1/2 -translate-x-1/2 w-11 h-11 rounded-xl bg-white/25 backdrop-blur border border-white/30 flex items-center justify-center text-lg font-black text-white active:scale-90"
-              onPointerDown={e => { e.stopPropagation(); setDir('up', true); }}
-              onPointerUp={() => setDir('up', false)}
-              onPointerLeave={() => setDir('up', false)}
-            >▲</button>
-            {/* Down */}
-            <button
-              className="absolute bottom-0 left-1/2 -translate-x-1/2 w-11 h-11 rounded-xl bg-white/25 backdrop-blur border border-white/30 flex items-center justify-center text-lg font-black text-white active:scale-90"
-              onPointerDown={e => { e.stopPropagation(); setDir('down', true); }}
-              onPointerUp={() => setDir('down', false)}
-              onPointerLeave={() => setDir('down', false)}
-            >▼</button>
-            {/* Left */}
-            <button
-              className="absolute left-0 top-1/2 -translate-y-1/2 w-11 h-11 rounded-xl bg-white/25 backdrop-blur border border-white/30 flex items-center justify-center text-lg font-black text-white active:scale-90"
-              onPointerDown={e => { e.stopPropagation(); setDir('left', true); }}
-              onPointerUp={() => setDir('left', false)}
-              onPointerLeave={() => setDir('left', false)}
-            >◀</button>
-            {/* Right */}
-            <button
-              className="absolute right-0 top-1/2 -translate-y-1/2 w-11 h-11 rounded-xl bg-white/25 backdrop-blur border border-white/30 flex items-center justify-center text-lg font-black text-white active:scale-90"
-              onPointerDown={e => { e.stopPropagation(); setDir('right', true); }}
-              onPointerUp={() => setDir('right', false)}
-              onPointerLeave={() => setDir('right', false)}
-            >▶</button>
-            {/* Center dot */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white/10" />
-          </div>
-
-          {/* Done button */}
+        <div className="absolute bottom-5 right-5 z-30">
           <motion.button
             className="px-6 py-3 rounded-2xl bg-[#FF6B9D] border-4 border-[#FF3D7F] font-black text-white text-sm shadow-lg active:scale-90"
             onPointerDown={e => { e.stopPropagation(); handleEndScene(); }}
@@ -675,7 +686,7 @@ export default function GameScene({ location, collectedItems, onSceneEnd, onQuit
           transition={{ duration: 2, repeat: Infinity }}
         >
           <span className="text-white/90 text-xs font-bold bg-black/30 px-3 py-1.5 rounded-full">
-            Use D-pad to walk · Tap items to discover!
+            Touch anywhere to walk Poppy · Tap items to discover!
           </span>
         </motion.div>
       )}
